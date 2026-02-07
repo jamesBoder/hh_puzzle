@@ -62,6 +62,10 @@ yarn-error.log*
 # Temporary files
 tmp/
 temp/
+EOF
 
-# Docs folder (ignore documentation)
+# Docs folder 
 docs/
+
+# yml
+*.yml
