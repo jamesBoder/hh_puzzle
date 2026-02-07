@@ -69,3 +69,9 @@ docs/
 
 # yml
 *.yml
+
+# any test file
+*.test.*
+
+# .sh files
+*.sh
