@@ -43,15 +43,15 @@ return &attempt, nil
 }
 
 func (r *attemptRepository) FindByUserAndPuzzle(userID, puzzleID uint) (*models.PuzzleAttempt, error) {
-var attempt models.PuzzleAttempt
-err := r.db.Where("user_id = ? AND puzzle_id = ?", userID, puzzleID).First(&attempt).Error
-if err != nil {
-if errors.Is(err, gorm.ErrRecordNotFound) {
-return nil, nil // Return nil without error if not found
-}
-return nil, err
-}
-return &attempt, nil
+	var attempt models.PuzzleAttempt
+	err := r.db.Where("user_id = ? AND puzzle_id = ?", userID, puzzleID).First(&attempt).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("attempt not found")
+		}
+		return nil, err
+	}
+	return &attempt, nil
 }
 
 func (r *attemptRepository) FindByUser(userID uint) ([]models.PuzzleAttempt, error) {

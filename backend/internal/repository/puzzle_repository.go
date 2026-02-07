@@ -46,7 +46,7 @@ func (r *puzzleRepository) FindByID(id uint) (*models.Puzzle, error) {
 
 func (r *puzzleRepository) FindDailyChallenge(date time.Time) (*models.Puzzle, error) {
 	var puzzle models.Puzzle
-	err := r.db.Where("is_daily_challenge = ? AND daily_challenge_date = ?", true, date).First(&puzzle).Error
+	err := r.db.Where("is_daily_challenge = ? AND DATE(daily_challenge_date) = DATE(?)", true, date).First(&puzzle).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("no daily challenge found for this date")
@@ -72,21 +72,18 @@ func (r *puzzleRepository) FindByFilters(difficulty, decade, region string, limi
 
 	err := query.Limit(limit).Offset(offset).Find(&puzzles).Error
 	return puzzles, err
-func (r *attemptRepository) FindByUserAndPuzzle(userID, puzzleID uint) (*models.PuzzleAttempt, error) {
-	var attempt models.PuzzleAttempt
-	err := r.db.Where("user_id = ? AND puzzle_id = ?", userID, puzzleID).First(&attempt).Error
 }
 
 func (r *puzzleRepository) Update(puzzle *models.Puzzle) error {
-return r.db.Save(puzzle).Error
+	return r.db.Save(puzzle).Error
 }
 
 func (r *puzzleRepository) Delete(id uint) error {
-return r.db.Delete(&models.Puzzle{}, id).Error
+	return r.db.Delete(&models.Puzzle{}, id).Error
 }
 
 func (r *puzzleRepository) Count() (int64, error) {
-var count int64
-err := r.db.Model(&models.Puzzle{}).Count(&count).Error
-return count, err
+	var count int64
+	err := r.db.Model(&models.Puzzle{}).Count(&count).Error
+	return count, err
 }

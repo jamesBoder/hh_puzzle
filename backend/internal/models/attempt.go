@@ -19,6 +19,7 @@ type PuzzleAttempt struct {
 	AccuracyPercentage *float64  `gorm:"type:decimal(5,2)" json:"accuracy_percentage,omitempty"`
 	
 	// Timestamps
+	CreatedAt          time.Time  `json:"created_at"`
 	StartedAt          time.Time  `json:"started_at"`
 	CompletedAt        *time.Time `gorm:"index" json:"completed_at,omitempty"`
 	UpdatedAt          time.Time  `json:"updated_at"`
