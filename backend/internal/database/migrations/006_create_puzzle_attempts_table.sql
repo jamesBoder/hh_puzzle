@@ -9,6 +9,7 @@ CREATE TABLE puzzle_attempts (
     hints_used INTEGER DEFAULT 0,
     points_earned INTEGER DEFAULT 0,
     accuracy_percentage DECIMAL(5,2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
