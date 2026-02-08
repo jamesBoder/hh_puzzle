@@ -55,7 +55,9 @@ func (s *attemptService) StartAttempt(userID, puzzleID uint) (*models.PuzzleAtte
 
 	// Check if attempt already exists
 	existingAttempt, err := s.attemptRepo.FindByUserAndPuzzle(userID, puzzleID)
-	if err != nil {
+	
+	// If error is NOT "attempt not found", return the error
+	if err != nil && err.Error() != "attempt not found" {
 		return nil, err
 	}
 
@@ -69,7 +71,7 @@ func (s *attemptService) StartAttempt(userID, puzzleID uint) (*models.PuzzleAtte
 		return nil, errors.New("puzzle already completed")
 	}
 
-	// Create new attempt
+	// Create new attempt (existingAttempt is nil, so no attempt exists yet)
 	attempt := &models.PuzzleAttempt{
 		UserID:       userID,
 		PuzzleID:     puzzleID,
