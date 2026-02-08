@@ -1,0 +1,37 @@
+[
+  {
+    "Answer": "TUPAC",
+    "Clue": "Legendary West Coast rapper known for 'California Love' (5)",
+    "Decade": "90s",
+    "Region": "LA",
+    "Category": "artist"
+  },
+  {
+    "Answer": "SNOOP",
+    "Clue": "Long Beach rapper known for 'Gin and Juice' (5)",
+    "Decade": "90s",
+    "Region": "LA",
+    "Category": "artist"
+  },
+  {
+    "Answer": "DRE",
+    "Clue": "Dr. ___, producer and founder of Aftermath Entertainment (3)",
+    "Decade": "90s",
+    "Region": "LA",
+    "Category": "producer"
+  },
+  {
+    "Answer": "NWA",
+    "Clue": "Pioneering Compton group: N.W.A. (3)",
+    "Decade": "80s",
+    "Region": "LA",
+    "Category": "group"
+  },
+  {
+    "Answer": "ICE CUBE",
+    "Clue": "Compton rapper and actor, former member of N.W.A. (8)",
+    "Decade": "90s",
+    "Region": "LA",
+    "Category": "artist"
+  }
+]
