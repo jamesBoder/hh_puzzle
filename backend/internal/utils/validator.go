@@ -32,3 +32,8 @@ func ValidateUsername(username string) bool {
 func SanitizeString(s string) string {
 	return strings.TrimSpace(s)
 }
+
+// SanitizeEmail removes whitespace and converts to lowercase for case-insensitive comparison
+func SanitizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
+}

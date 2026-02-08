@@ -31,8 +31,8 @@ func NewAuthService(userRepo repository.UserRepository) AuthService {
 }
 
 func (s *authService) Register(email, username, password string) (*models.User, string, error) {
-	// Validate input
-	email = utils.SanitizeString(email)
+	// Validate and sanitize input
+	email = utils.SanitizeEmail(email) // Convert to lowercase for case-insensitive comparison
 	username = utils.SanitizeString(username)
 
 	if !utils.ValidateEmail(email) {
@@ -47,13 +47,13 @@ func (s *authService) Register(email, username, password string) (*models.User, 
 		return nil, "", errors.New("password must be at least 8 characters")
 	}
 
-	// Check if email already exists
+	// Check if email already exists (case-insensitive)
 	existingUser, _ := s.userRepo.FindByEmail(email)
 	if existingUser != nil {
 		return nil, "", errors.New("email already registered")
 	}
 
-	// Check if username already exists
+	// Check if username already exists (case-sensitive)
 	existingUser, _ = s.userRepo.FindByUsername(username)
 	if existingUser != nil {
 		return nil, "", errors.New("username already taken")
@@ -73,6 +73,7 @@ func (s *authService) Register(email, username, password string) (*models.User, 
 		IsGuest:      false,
 	}
 
+	// Create user (profile will be auto-created by GORM AfterCreate hook)
 	if err := s.userRepo.Create(user); err != nil {
 		return nil, "", fmt.Errorf("failed to create user: %w", err)
 	}
@@ -87,8 +88,8 @@ func (s *authService) Register(email, username, password string) (*models.User, 
 }
 
 func (s *authService) Login(email, password string) (*models.User, string, error) {
-	// Sanitize input
-	email = utils.SanitizeString(email)
+	// Sanitize input (convert email to lowercase for case-insensitive comparison)
+	email = utils.SanitizeEmail(email)
 
 	// Find user by email
 	user, err := s.userRepo.FindByEmail(email)
@@ -131,6 +132,7 @@ func (s *authService) CreateGuestUser() (*models.User, string, error) {
 		IsGuest:  true,
 	}
 
+	// Create guest user (profile will be auto-created by GORM AfterCreate hook)
 	if err := s.userRepo.Create(user); err != nil {
 		return nil, "", fmt.Errorf("failed to create guest user: %w", err)
 	}
