@@ -1,14 +1,13 @@
 package utils
 
 import (
-	"errots"
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte
-("your-secret-key-change-in-production")// move to config
+var jwtSecret = []byte("your-secret-key-change-in-production") // TODO: Move to config
 
 // JWTClaims represents the structure of the JWT claims.
 type Claims struct {
