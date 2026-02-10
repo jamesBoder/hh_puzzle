@@ -1,9 +1,13 @@
 package crossword
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/warmans/go-crossword"
 	"hh_puzzle/internal/models"
@@ -110,8 +114,11 @@ func (g *HipHopGenerator) convertToPuzzle(
 		city = originalWords[0].City
 	}
 
+	// Generate a unique identifier based on puzzle content
+	contentHash := generateContentHash(cw)
+
 	return &models.Puzzle{
-		Title:         generateTitle(originalWords, difficulty),
+		Title:         generateTitle(originalWords, difficulty, contentHash),
 		Description:   generateDescription(originalWords, difficulty),
 		Difficulty:    difficulty,
 		GridData:      gridData,
@@ -125,12 +132,12 @@ func (g *HipHopGenerator) convertToPuzzle(
 	}
 }
 
-func generateTitle(words []HipHopWord, difficulty string) string {
+func generateTitle(words []HipHopWord, difficulty string, contentHash string) string {
 	if len(words) == 0 {
 		return "Hip-Hop Crossword Puzzle"
 	}
 
-	// Use metadata from first word to create title
+	// Use metadata from first word to create base title
 	title := "Hip-Hop Puzzle"
 
 	if words[0].Decade != "" {
@@ -149,6 +156,12 @@ func generateTitle(words []HipHopWord, difficulty string) string {
 		title += " (Medium)"
 	case "expert":
 		title += " (Hard)"
+	}
+
+	// Add unique identifier using first 6 characters of content hash
+	// This ensures each puzzle has a unique title even with same metadata
+	if len(contentHash) >= 6 {
+		title += " #" + contentHash[:6]
 	}
 
 	return title
@@ -174,6 +187,141 @@ func generateDescription(words []HipHopWord, difficulty string) string {
 	desc += ". Test your knowledge of artists, albums, and hip-hop culture!"
 
 	return desc
+}
+
+// generateContentHash creates a unique hash based on puzzle content
+func generateContentHash(cw *crossword.Crossword) string {
+	// Collect all words and their positions to create a unique signature
+	var content strings.Builder
+	
+	// Sort words by position for consistent hashing
+	type wordPos struct {
+		word string
+		x, y int
+		vert bool
+	}
+	
+	positions := make([]wordPos, 0, len(cw.Words))
+	for _, placement := range cw.Words {
+		positions = append(positions, wordPos{
+			word: placement.Word.Word,
+			x:    placement.X,
+			y:    placement.Y,
+			vert: placement.Vertical,
+		})
+	}
+	
+	// Sort by position for consistency
+	sort.Slice(positions, func(i, j int) bool {
+		if positions[i].y != positions[j].y {
+			return positions[i].y < positions[j].y
+		}
+		return positions[i].x < positions[j].x
+	})
+	
+	// Build content string
+	for _, pos := range positions {
+		content.WriteString(fmt.Sprintf("%s:%d:%d:%v;", pos.word, pos.x, pos.y, pos.vert))
+	}
+	
+	// Generate MD5 hash
+	hash := md5.Sum([]byte(content.String()))
+	return hex.EncodeToString(hash[:])
+}
+
+// GetPuzzleContentHash returns a hash of the puzzle's content for duplicate detection
+func GetPuzzleContentHash(puzzle *models.Puzzle) string {
+	var content strings.Builder
+	
+	// Collect all answers from clues
+	answers := make([]string, 0)
+	
+	// Extract answers from across clues
+	for _, clueData := range puzzle.CluesAcross {
+		if clueMap, ok := clueData.(map[string]interface{}); ok {
+			if answer, ok := clueMap["answer"].(string); ok {
+				answers = append(answers, answer)
+			}
+		}
+	}
+	
+	// Extract answers from down clues
+	for _, clueData := range puzzle.CluesDown {
+		if clueMap, ok := clueData.(map[string]interface{}); ok {
+			if answer, ok := clueMap["answer"].(string); ok {
+				answers = append(answers, answer)
+			}
+		}
+	}
+	
+	// Sort for consistent hashing
+	sort.Strings(answers)
+	
+	// Build content string
+	for _, answer := range answers {
+		content.WriteString(answer + ";")
+	}
+	
+	// Generate MD5 hash
+	hash := md5.Sum([]byte(content.String()))
+	return hex.EncodeToString(hash[:])
+}
+
+// CalculatePuzzleSimilarity calculates similarity between two puzzles (0.0 to 1.0)
+func CalculatePuzzleSimilarity(puzzle1, puzzle2 *models.Puzzle) float64 {
+	// Extract answers from both puzzles
+	answers1 := extractAnswers(puzzle1)
+	answers2 := extractAnswers(puzzle2)
+	
+	if len(answers1) == 0 || len(answers2) == 0 {
+		return 0.0
+	}
+	
+	// Count common answers
+	commonCount := 0
+	answerSet := make(map[string]bool)
+	for _, answer := range answers1 {
+		answerSet[answer] = true
+	}
+	
+	for _, answer := range answers2 {
+		if answerSet[answer] {
+			commonCount++
+		}
+	}
+	
+	// Calculate similarity as percentage of common answers
+	maxLen := len(answers1)
+	if len(answers2) > maxLen {
+		maxLen = len(answers2)
+	}
+	
+	return float64(commonCount) / float64(maxLen)
+}
+
+// extractAnswers extracts all answers from a puzzle
+func extractAnswers(puzzle *models.Puzzle) []string {
+	answers := make([]string, 0)
+	
+	// Extract from across clues
+	for _, clueData := range puzzle.CluesAcross {
+		if clueMap, ok := clueData.(map[string]interface{}); ok {
+			if answer, ok := clueMap["answer"].(string); ok {
+				answers = append(answers, answer)
+			}
+		}
+	}
+	
+	// Extract from down clues
+	for _, clueData := range puzzle.CluesDown {
+		if clueMap, ok := clueData.(map[string]interface{}); ok {
+			if answer, ok := clueMap["answer"].(string); ok {
+				answers = append(answers, answer)
+			}
+		}
+	}
+	
+	return answers
 }
 
 // Helper function to convert placement to clue number
