@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"hh_puzzle/internal/config"
 	"hh_puzzle/internal/crossword"
@@ -16,6 +18,9 @@ import (
 )
 
 func main() {
+	// Seed random number generator for word shuffling
+	rand.Seed(time.Now().UnixNano())
+	
 	// Load config
 	cfg, err := config.Load()
 	if err != nil {
@@ -146,6 +151,13 @@ func main() {
 		}
 		
 		for i := 0; i < puzzlesToGenerate; i++ {
+			// Shuffle words to create variation in puzzle generation
+			shuffledWords := make([]crossword.HipHopWord, len(words))
+			copy(shuffledWords, words)
+			rand.Shuffle(len(shuffledWords), func(i, j int) {
+				shuffledWords[i], shuffledWords[j] = shuffledWords[j], shuffledWords[i]
+			})
+			
 			// Use defer/recover to catch panics from the crossword library
 			success := false
 			func() {
@@ -156,7 +168,7 @@ func main() {
 					}
 				}()
 				
-				puzzle, err := generator.GeneratePuzzle(words, difficulty, 50)
+				puzzle, err := generator.GeneratePuzzle(shuffledWords, difficulty, 100)
 				if err != nil {
 					fmt.Printf("   ✗ Error generating puzzle %d: %v\n", i+1, err)
 					failureCount++
@@ -315,15 +327,26 @@ func calculatePuzzleCount(wordCount int) int {
 }
 
 // puzzleExists checks if a similar puzzle already exists in the database
+// Uses content-based similarity detection instead of just metadata matching
 func puzzleExists(puzzle *models.Puzzle) bool {
-	var count int64
+	// Get all existing puzzles with same difficulty, region, and decade
+	// This narrows down the search space for similarity comparison
+	var existingPuzzles []models.Puzzle
 	
-	// Check for puzzles with the same title, difficulty, and region
-	// This prevents exact duplicates while allowing variations
-	result := database.DB.Model(&models.Puzzle{}).
-		Where("title = ? AND difficulty = ? AND region = ? AND decade = ?", 
-			puzzle.Title, puzzle.Difficulty, puzzle.Region, puzzle.Decade).
-		Count(&count)
+	query := database.DB.Model(&models.Puzzle{})
+	
+	// Add filters if metadata is present
+	if puzzle.Difficulty != "" {
+		query = query.Where("difficulty = ?", puzzle.Difficulty)
+	}
+	if puzzle.Region != "" {
+		query = query.Where("region = ?", puzzle.Region)
+	}
+	if puzzle.Decade != "" {
+		query = query.Where("decade = ?", puzzle.Decade)
+	}
+	
+	result := query.Find(&existingPuzzles)
 	
 	if result.Error != nil {
 		// If there's an error checking, log it but don't block creation
@@ -331,5 +354,24 @@ func puzzleExists(puzzle *models.Puzzle) bool {
 		return false
 	}
 	
-	return count > 0
+	// If no existing puzzles with same metadata, it's definitely unique
+	if len(existingPuzzles) == 0 {
+		return false
+	}
+	
+	// Check content similarity with existing puzzles
+	// If similarity is > 85%, consider it a duplicate
+	// Lower threshold allows more variation while still blocking true duplicates
+	const similarityThreshold = 0.85
+	
+	for _, existing := range existingPuzzles {
+		similarity := crossword.CalculatePuzzleSimilarity(puzzle, &existing)
+		if similarity > similarityThreshold {
+			// Found a very similar puzzle
+			return true
+		}
+	}
+	
+	// No similar puzzles found
+	return false
 }
