@@ -106,20 +106,16 @@ func (g *HipHopGenerator) convertToPuzzle(
 		estimatedTime = 30
 	}
 
-	// Extract metadata from words
-	var decade, region, city string
-	if len(originalWords) > 0 {
-		decade = originalWords[0].Decade
-		region = originalWords[0].Region
-		city = originalWords[0].City
-	}
+	// Extract metadata from ACTUALLY USED words in the puzzle
+	usedWords := getUsedWords(cw, originalWords)
+	decade, region, city := extractMetadataFromUsedWords(usedWords)
 
 	// Generate a unique identifier based on puzzle content
 	contentHash := generateContentHash(cw)
 
 	return &models.Puzzle{
-		Title:         generateTitle(originalWords, difficulty, contentHash),
-		Description:   generateDescription(originalWords, difficulty),
+		Title:         generateTitle(usedWords, difficulty, contentHash),
+		Description:   generateDescription(usedWords, difficulty),
 		Difficulty:    difficulty,
 		GridData:      gridData,
 		CluesAcross:   cluesAcross,
@@ -130,6 +126,71 @@ func (g *HipHopGenerator) convertToPuzzle(
 		Region:        region,
 		City:          city,
 	}
+}
+
+// getUsedWords returns only the words that were actually used in the generated puzzle
+func getUsedWords(cw *crossword.Crossword, originalWords []HipHopWord) []HipHopWord {
+	// Create a map of used answers
+	usedAnswers := make(map[string]bool)
+	for _, placement := range cw.Words {
+		usedAnswers[strings.ToUpper(placement.Word.Word)] = true
+	}
+	
+	// Filter original words to only those actually used
+	usedWords := make([]HipHopWord, 0)
+	for _, word := range originalWords {
+		if usedAnswers[strings.ToUpper(word.Answer)] {
+			usedWords = append(usedWords, word)
+		}
+	}
+	
+	return usedWords
+}
+
+// extractMetadataFromUsedWords determines the most common metadata from used words
+func extractMetadataFromUsedWords(words []HipHopWord) (decade, region, city string) {
+	if len(words) == 0 {
+		return "", "", ""
+	}
+	
+	// Count occurrences of each metadata value
+	decadeCounts := make(map[string]int)
+	regionCounts := make(map[string]int)
+	cityCounts := make(map[string]int)
+	
+	for _, word := range words {
+		if word.Decade != "" {
+			decadeCounts[word.Decade]++
+		}
+		if word.Region != "" {
+			regionCounts[word.Region]++
+		}
+		if word.City != "" {
+			cityCounts[word.City]++
+		}
+	}
+	
+	// Find most common values
+	decade = getMostCommon(decadeCounts)
+	region = getMostCommon(regionCounts)
+	city = getMostCommon(cityCounts)
+	
+	return decade, region, city
+}
+
+// getMostCommon returns the key with the highest count
+func getMostCommon(counts map[string]int) string {
+	maxCount := 0
+	mostCommon := ""
+	
+	for key, count := range counts {
+		if count > maxCount {
+			maxCount = count
+			mostCommon = key
+		}
+	}
+	
+	return mostCommon
 }
 
 func generateTitle(words []HipHopWord, difficulty string, contentHash string) string {
