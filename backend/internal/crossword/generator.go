@@ -52,6 +52,7 @@ type HipHopWord struct {
 	Clue     string
 	Decade   string
 	Region   string
+	City     string
 	Category string
 }
 
@@ -102,10 +103,11 @@ func (g *HipHopGenerator) convertToPuzzle(
 	}
 
 	// Extract metadata from words
-	var decade, region string
+	var decade, region, city string
 	if len(originalWords) > 0 {
 		decade = originalWords[0].Decade
 		region = originalWords[0].Region
+		city = originalWords[0].City
 	}
 
 	return &models.Puzzle{
@@ -119,6 +121,7 @@ func (g *HipHopGenerator) convertToPuzzle(
 		BasePoints:    basePoints,
 		Decade:        decade,
 		Region:        region,
+		City:          city,
 	}
 }
 

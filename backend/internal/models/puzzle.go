@@ -20,7 +20,8 @@ type Puzzle struct {
 	// Categorization
 	Difficulty          string         `gorm:"size:20;not null;index" json:"difficulty"` // beginner, intermediate, expert
 	Decade              string         `gorm:"size:10;index" json:"decade,omitempty"` // 80s, 90s, 2000s, 2010s, 2020s
-	Region              string         `gorm:"size:50;index" json:"region,omitempty"` // NYC, LA, Atlanta, etc.
+	Region              string         `gorm:"size:50;index" json:"region,omitempty"` // East Coast, West Coast, South, Midwest, International
+	City                string         `gorm:"size:50;index" json:"city,omitempty"` // NYC, LA, Atlanta, Chicago, etc.
 	Subgenre            string         `gorm:"size:50" json:"subgenre,omitempty"` // Trap, Boom Bap, etc.
 	
 	// Metadata
