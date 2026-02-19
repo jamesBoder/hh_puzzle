@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -14,19 +14,10 @@ import { useAuth } from '../../hooks/useAuth';
 
 export const HomeScreen = ({ navigation }: any) => {
   const { user } = useAuth();
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string | undefined>();
-  
-  const { data: puzzles, isLoading, refetch } = usePuzzles({
-    difficulty: selectedDifficulty,
-  });
-  
+
+  const { data: puzzles, isLoading, refetch } = usePuzzles({});
+
   const { data: dailyChallenge } = useDailyChallenge();
-
-  const difficulties = ['All', 'beginner', 'intermediate', 'expert'];
-
-  const handleDifficultyFilter = (difficulty: string) => {
-    setSelectedDifficulty(difficulty === 'All' ? undefined : difficulty);
-  };
 
   const handlePuzzlePress = (puzzleId: number) => {
     navigation.navigate('PuzzleDetail', { puzzleId });
@@ -34,100 +25,87 @@ export const HomeScreen = ({ navigation }: any) => {
 
   const handleDailyChallengePress = () => {
     if (dailyChallenge) {
-      navigation.navigate('PuzzleDetail', { 
+      navigation.navigate('PuzzleDetail', {
         puzzleId: dailyChallenge.id,
-        isDaily: true 
+        isDaily: true,
       });
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* Vintage Header */}
       <View style={styles.header}>
-        <View>
-          {user ? (
-            <>
-              <Text style={styles.greeting}>Welcome back,</Text>
-              <Text style={styles.username}>{user.username}!</Text>
-            </>
-          ) : (
-            <>
-              <Text style={styles.greeting}>Hip-Hop</Text>
-              <Text style={styles.username}>Crossword Puzzles 🎵</Text>
-            </>
-          )}
+        <View style={styles.headerDivider} />
+        <View style={styles.headerContent}>
+          <Text style={styles.headerLabel}>◆ EST. 1973 ◆</Text>
+          <Text style={styles.headerTitle}>HH PUZZLE</Text>
+          <Text style={styles.headerSubtitle}>
+            {user ? `WELCOME BACK, ${user.username.toUpperCase()}` : 'HIP-HOP CROSSWORD SERIES'}
+          </Text>
         </View>
+        <View style={styles.headerDivider} />
       </View>
 
-      {/* User Stats — only shown when logged in */}
+      {/* User Stats — vintage record label style */}
       {user && (
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{user.total_points || 0}</Text>
-            <Text style={styles.statLabel}>Points</Text>
+            <Text style={styles.statLabel}>PTS</Text>
           </View>
+          <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{user.puzzles_completed || 0}</Text>
-            <Text style={styles.statLabel}>Completed</Text>
+            <Text style={styles.statLabel}>SOLVED</Text>
           </View>
+          <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{user.current_streak || 0}</Text>
-            <Text style={styles.statLabel}>Streak</Text>
+            <Text style={styles.statLabel}>STREAK</Text>
           </View>
         </View>
       )}
 
-      {/* Daily Challenge */}
+      {/* Daily Challenge — vintage cassette style */}
       {dailyChallenge && (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.dailyChallenge}
           onPress={handleDailyChallengePress}
+          activeOpacity={0.8}
         >
-          <View style={styles.dailyHeader}>
-            <Text style={styles.dailyTitle}>🔥 Daily Challenge</Text>
-            <Text style={styles.dailyBadge}>NEW</Text>
+          <View style={styles.dailyInner}>
+            <View style={styles.dailySideLabel}>
+              <Text style={styles.dailySideLabelText}>SIDE{'\n'}A</Text>
+            </View>
+            <View style={styles.dailyContent}>
+              <Text style={styles.dailyTag}>◆ DAILY DROP ◆</Text>
+              <Text style={styles.dailyPuzzle} numberOfLines={1}>
+                {dailyChallenge.title}
+              </Text>
+              <Text style={styles.dailyDescription}>
+                BONUS POINTS AVAILABLE · TAP TO PLAY
+              </Text>
+            </View>
+            <View style={styles.dailyArrow}>
+              <Text style={styles.dailyArrowText}>▶</Text>
+            </View>
           </View>
-          <Text style={styles.dailyPuzzle}>{dailyChallenge.title}</Text>
-          <Text style={styles.dailyDescription}>
-            Complete today's puzzle for bonus points!
-          </Text>
         </TouchableOpacity>
       )}
 
-      {/* Difficulty Filter */}
-      <View style={styles.filterContainer}>
-        {difficulties.map((difficulty) => (
-          <TouchableOpacity
-            key={difficulty}
-            style={[
-              styles.filterButton,
-              (difficulty === 'All' && !selectedDifficulty) ||
-              difficulty === selectedDifficulty
-                ? styles.filterButtonActive
-                : null,
-            ]}
-            onPress={() => handleDifficultyFilter(difficulty)}
-          >
-            <Text
-              style={[
-                styles.filterText,
-                (difficulty === 'All' && !selectedDifficulty) ||
-                difficulty === selectedDifficulty
-                  ? styles.filterTextActive
-                  : null,
-              ]}
-            >
-              {difficulty === 'All' ? 'All' : difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      {/* Section label */}
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionLine} />
+        <Text style={styles.sectionLabel}>ALL PUZZLES</Text>
+        <View style={styles.sectionLine} />
       </View>
 
       {/* Puzzle List */}
       {isLoading ? (
         <View style={styles.loading}>
           <ActivityIndicator size="large" color="#FFD700" />
+          <Text style={styles.loadingText}>LOADING TRACKS...</Text>
         </View>
       ) : (
         <FlatList
@@ -149,7 +127,8 @@ export const HomeScreen = ({ navigation }: any) => {
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No puzzles found</Text>
+              <Text style={styles.emptyIcon}>◈</Text>
+              <Text style={styles.emptyText}>NO PUZZLES FOUND</Text>
             </View>
           }
         />
@@ -161,123 +140,182 @@ export const HomeScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#111111',
   },
+  // ── Vintage Header ──────────────────────────────────────
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    paddingTop: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
     alignItems: 'center',
-    padding: 20,
-    paddingTop: 10,
   },
-  greeting: {
-    fontSize: 16,
-    color: '#999',
+  headerDivider: {
+    width: '100%',
+    height: 2,
+    backgroundColor: '#FFD700',
+    marginVertical: 6,
   },
-  username: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  headerContent: {
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  headerLabel: {
+    fontSize: 10,
+    color: '#B8860B',
+    letterSpacing: 4,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  headerTitle: {
+    fontSize: 36,
+    fontWeight: '900',
     color: '#FFD700',
+    letterSpacing: 8,
   },
+  headerSubtitle: {
+    fontSize: 10,
+    color: '#C8A951',
+    letterSpacing: 3,
+    marginTop: 2,
+  },
+  // ── Stats Bar ───────────────────────────────────────────
   statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 20,
-    backgroundColor: '#2a2a2a',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginHorizontal: 20,
-    borderRadius: 12,
-    marginBottom: 20,
+    marginBottom: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#3a3020',
+    backgroundColor: '#1e1a0e',
   },
   statItem: {
     alignItems: 'center',
+    flex: 1,
   },
   statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '900',
     color: '#FFD700',
+    letterSpacing: 1,
   },
   statLabel: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 4,
+    fontSize: 9,
+    color: '#8a7a40',
+    letterSpacing: 3,
+    marginTop: 2,
   },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: '#3a3020',
+  },
+  // ── Daily Challenge (Cassette Style) ────────────────────
   dailyChallenge: {
-    backgroundColor: '#2a2a2a',
     marginHorizontal: 20,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
+    marginBottom: 16,
     borderWidth: 2,
     borderColor: '#FFD700',
+    backgroundColor: '#1a1500',
   },
-  dailyHeader: {
+  dailyInner: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
   },
-  dailyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFD700',
+  dailySideLabel: {
+    width: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRightWidth: 2,
+    borderRightColor: '#FFD700',
+    paddingVertical: 14,
+    backgroundColor: '#FFD700',
   },
-  dailyBadge: {
-    backgroundColor: '#ff4444',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#fff',
+  dailySideLabelText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#1a1a1a',
+    textAlign: 'center',
+    letterSpacing: 1,
+  },
+  dailyContent: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  dailyTag: {
+    fontSize: 9,
+    color: '#B8860B',
+    letterSpacing: 3,
+    marginBottom: 4,
   },
   dailyPuzzle: {
-    fontSize: 16,
-    color: '#fff',
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFD700',
+    letterSpacing: 1,
     marginBottom: 4,
   },
   dailyDescription: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: 9,
+    color: '#8a7a40',
+    letterSpacing: 2,
   },
-  filterContainer: {
+  dailyArrow: {
+    paddingHorizontal: 14,
+  },
+  dailyArrowText: {
+    fontSize: 18,
+    color: '#FFD700',
+  },
+  // ── Section Header ──────────────────────────────────────
+  sectionHeader: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 16,
-    gap: 8,
-  },
-  filterButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: '#2a2a2a',
     alignItems: 'center',
+    marginHorizontal: 20,
+    marginBottom: 12,
   },
-  filterButtonActive: {
-    backgroundColor: '#FFD700',
+  sectionLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#3a3020',
   },
-  filterText: {
-    fontSize: 14,
-    color: '#999',
+  sectionLabel: {
+    fontSize: 10,
+    color: '#8a7a40',
+    letterSpacing: 4,
+    marginHorizontal: 10,
+    fontWeight: '700',
   },
-  filterTextActive: {
-    color: '#1a1a1a',
-    fontWeight: 'bold',
-  },
+  // ── List ────────────────────────────────────────────────
   listContent: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   loading: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 11,
+    color: '#8a7a40',
+    letterSpacing: 4,
   },
   emptyState: {
     padding: 40,
     alignItems: 'center',
   },
+  emptyIcon: {
+    fontSize: 32,
+    color: '#3a3020',
+    marginBottom: 12,
+  },
   emptyText: {
-    fontSize: 16,
-    color: '#999',
+    fontSize: 12,
+    color: '#8a7a40',
+    letterSpacing: 4,
   },
 });
