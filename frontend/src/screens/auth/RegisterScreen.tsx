@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -21,23 +22,24 @@ export const RegisterScreen = ({ navigation }: any) => {
 
   const handleRegister = async () => {
     if (!email || !username || !password || !confirmPassword) {
-      alert('Please fill in all fields');
+      Alert.alert('Missing Fields', 'Please fill in all fields');
       return;
     }
 
     if (password !== confirmPassword) {
-      alert('Passwords do not match');
+      Alert.alert('Password Mismatch', 'Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      alert('Password must be at least 6 characters');
+      Alert.alert('Weak Password', 'Password must be at least 6 characters');
       return;
     }
 
     const success = await register({ email, username, password });
     if (success) {
-      // Navigation will be handled by AppNavigator
+      // Navigate back to Profile screen which will now show the full profile
+      navigation.navigate('ProfileMain');
     }
   };
 
@@ -107,6 +109,13 @@ export const RegisterScreen = ({ navigation }: any) => {
                 Already have an account? Login
               </Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.backButton}
+            >
+              <Text style={styles.backText}>← Back</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -175,8 +184,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'center',
   },
+  backButton: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  backText: {
+    color: '#999',
+    fontSize: 15,
+  },
 });
-
-function alert(_arg0: string) {
-    throw new Error('Function not implemented.');
-}

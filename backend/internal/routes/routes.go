@@ -37,6 +37,21 @@ func SetupRoutes(
 		auth.POST("/guest", authHandler.CreateGuest)
 	}
 
+	// Public routes - Puzzle browsing (no login required)
+	publicPuzzles := r.Group("/api/puzzles")
+	{
+		publicPuzzles.GET("", puzzleHandler.GetPuzzles)
+		publicPuzzles.GET("/daily", puzzleHandler.GetDailyChallenge)
+		publicPuzzles.GET("/:id", puzzleHandler.GetPuzzleByID)
+	}
+
+	// Public routes - Puzzle packs browsing (no login required)
+	publicPacks := r.Group("/api/puzzle-packs")
+	{
+		publicPacks.GET("", puzzleHandler.GetPuzzlePacks)
+		publicPacks.GET("/:id", puzzleHandler.GetPuzzlePackByID)
+	}
+
 	// Protected routes - Require authentication
 	api := r.Group("/api")
 	api.Use(middleware.AuthMiddleware())
@@ -54,22 +69,7 @@ func SetupRoutes(
 			users.DELETE("/account", userHandler.DeleteAccount)
 		}
 
-		// Puzzle routes
-		puzzles := api.Group("/puzzles")
-		{
-			puzzles.GET("", puzzleHandler.GetPuzzles)
-			puzzles.GET("/:id", puzzleHandler.GetPuzzleByID)
-			puzzles.GET("/daily", puzzleHandler.GetDailyChallenge)
-		}
-
-		// Puzzle pack routes
-		packs := api.Group("/puzzle-packs")
-		{
-			packs.GET("", puzzleHandler.GetPuzzlePacks)
-			packs.GET("/:id", puzzleHandler.GetPuzzlePackByID)
-		}
-
-		// Attempt routes
+		// Attempt routes (require login to track progress)
 		attempts := api.Group("/attempts")
 		{
 			attempts.POST("/start", attemptHandler.StartAttempt)

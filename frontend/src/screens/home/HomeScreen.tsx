@@ -13,7 +13,7 @@ import { PuzzleCard } from '../../components/puzzle/PuzzleCard';
 import { useAuth } from '../../hooks/useAuth';
 
 export const HomeScreen = ({ navigation }: any) => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | undefined>();
   
   const { data: puzzles, isLoading, refetch } = usePuzzles({
@@ -46,29 +46,37 @@ export const HomeScreen = ({ navigation }: any) => {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Welcome back,</Text>
-          <Text style={styles.username}>{user?.username}!</Text>
+          {user ? (
+            <>
+              <Text style={styles.greeting}>Welcome back,</Text>
+              <Text style={styles.username}>{user.username}!</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.greeting}>Hip-Hop</Text>
+              <Text style={styles.username}>Crossword Puzzles 🎵</Text>
+            </>
+          )}
         </View>
-        <TouchableOpacity onPress={logout} style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
       </View>
 
-      {/* User Stats */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{user?.total_points || 0}</Text>
-          <Text style={styles.statLabel}>Points</Text>
+      {/* User Stats — only shown when logged in */}
+      {user && (
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{user.total_points || 0}</Text>
+            <Text style={styles.statLabel}>Points</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{user.puzzles_completed || 0}</Text>
+            <Text style={styles.statLabel}>Completed</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{user.current_streak || 0}</Text>
+            <Text style={styles.statLabel}>Streak</Text>
+          </View>
         </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{user?.puzzles_completed || 0}</Text>
-          <Text style={styles.statLabel}>Completed</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{user?.current_streak || 0}</Text>
-          <Text style={styles.statLabel}>Streak</Text>
-        </View>
-      </View>
+      )}
 
       {/* Daily Challenge */}
       {dailyChallenge && (
@@ -170,13 +178,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FFD700',
-  },
-  logoutButton: {
-    padding: 8,
-  },
-  logoutText: {
-    color: '#ff4444',
-    fontSize: 14,
   },
   statsContainer: {
     flexDirection: 'row',

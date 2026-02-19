@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -18,13 +19,14 @@ export const LoginScreen = ({ navigation }: any) => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      alert('Please fill in all fields');
+      Alert.alert('Missing Fields', 'Please fill in all fields');
       return;
     }
 
     const success = await login({ email, password });
     if (success) {
-      // Navigation will be handled by AppNavigator
+      // Navigate back to Profile screen which will now show the full profile
+      navigation.navigate('ProfileMain');
     }
   };
 
@@ -76,6 +78,13 @@ export const LoginScreen = ({ navigation }: any) => {
             <Text style={styles.linkText}>
               Don't have an account? Register
             </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -141,8 +150,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'center',
   },
+  backButton: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  backText: {
+    color: '#999',
+    fontSize: 15,
+  },
 });
-
-function alert(_arg0: string) {
-    throw new Error('Function not implemented.');
-}

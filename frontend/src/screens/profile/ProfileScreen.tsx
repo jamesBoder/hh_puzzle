@@ -12,8 +12,63 @@ import { useAuth } from '../../hooks/useAuth';
 export const ProfileScreen = ({ navigation }: any) => {
   const { user, logout } = useAuth();
 
+  // When not logged in, show login/register options
   if (!user) {
-    return null;
+    return (
+      <ScrollView style={styles.container}>
+        <View style={styles.guestHeader}>
+          <View style={styles.guestAvatar}>
+            <Text style={styles.guestAvatarText}>🎵</Text>
+          </View>
+          <Text style={styles.guestTitle}>Join HH Puzzle</Text>
+          <Text style={styles.guestSubtitle}>
+            Sign in to track your progress, earn points, and compete on the leaderboard
+          </Text>
+        </View>
+
+        <View style={styles.guestFeatures}>
+          <View style={styles.featureItem}>
+            <Text style={styles.featureIcon}>⭐</Text>
+            <View style={styles.featureText}>
+              <Text style={styles.featureTitle}>Earn Points</Text>
+              <Text style={styles.featureDesc}>Complete puzzles to earn points and level up</Text>
+            </View>
+          </View>
+          <View style={styles.featureItem}>
+            <Text style={styles.featureIcon}>🔥</Text>
+            <View style={styles.featureText}>
+              <Text style={styles.featureTitle}>Daily Streaks</Text>
+              <Text style={styles.featureDesc}>Keep your streak alive with daily challenges</Text>
+            </View>
+          </View>
+          <View style={styles.featureItem}>
+            <Text style={styles.featureIcon}>🏆</Text>
+            <View style={styles.featureText}>
+              <Text style={styles.featureTitle}>Achievements</Text>
+              <Text style={styles.featureDesc}>Unlock achievements as you master hip-hop trivia</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.guestActions}>
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => navigation.navigate('Login')}
+          >
+            <Text style={styles.loginButtonText}>Login</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.registerButton}
+            onPress={() => navigation.navigate('Register')}
+          >
+            <Text style={styles.registerButtonText}>Create Account</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    );
   }
 
   const stats = [
@@ -251,6 +306,95 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff4444',
   },
   logoutButtonText: {
+    fontWeight: 'bold',
+  },
+  // Guest (unauthenticated) styles
+  guestHeader: {
+    alignItems: 'center',
+    padding: 40,
+    paddingTop: 60,
+  },
+  guestAvatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#2a2a2a',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#FFD700',
+  },
+  guestAvatarText: {
+    fontSize: 48,
+  },
+  guestTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFD700',
+    marginBottom: 12,
+  },
+  guestSubtitle: {
+    fontSize: 15,
+    color: '#999',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  guestFeatures: {
+    paddingHorizontal: 24,
+    marginBottom: 32,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2a2a2a',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  featureIcon: {
+    fontSize: 28,
+    marginRight: 16,
+  },
+  featureText: {
+    flex: 1,
+  },
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  featureDesc: {
+    fontSize: 13,
+    color: '#999',
+  },
+  guestActions: {
+    paddingHorizontal: 24,
+    gap: 12,
+  },
+  loginButton: {
+    backgroundColor: '#FFD700',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  loginButtonText: {
+    color: '#1a1a1a',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  registerButton: {
+    backgroundColor: 'transparent',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFD700',
+  },
+  registerButtonText: {
+    color: '#FFD700',
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });

@@ -1,13 +1,13 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { AuthNavigator } from './AuthNavigator';
 import { MainNavigator } from './MainNavigator';
-import { useAuth } from '../hooks/useAuth';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { useAuth } from '../hooks/useAuth';
 
 export const AppNavigator = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { loading } = useAuth();
 
+  // Show loading spinner while checking stored auth token
   if (loading) {
     return (
       <View style={styles.loading}>
@@ -16,9 +16,10 @@ export const AppNavigator = () => {
     );
   }
 
+  // Always show MainNavigator — login/register is accessible via Profile tab
   return (
     <NavigationContainer>
-      {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
+      <MainNavigator />
     </NavigationContainer>
   );
 };

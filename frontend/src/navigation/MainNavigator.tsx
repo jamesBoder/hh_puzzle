@@ -4,12 +4,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { PuzzleDetailScreen } from '../screens/home/PuzzleDetailScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
+import { LoginScreen } from '../screens/auth/LoginScreen';
+import { RegisterScreen } from '../screens/auth/RegisterScreen';
 import { Text } from 'react-native';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Home Stack
+// Home Stack — includes puzzle browsing
 const HomeStack = () => {
   return (
     <Stack.Navigator
@@ -23,15 +25,48 @@ const HomeStack = () => {
         },
       }}
     >
-      <Stack.Screen 
-        name="HomeMain" 
+      <Stack.Screen
+        name="HomeMain"
         component={HomeScreen}
         options={{ title: 'HH Puzzle' }}
       />
-      <Stack.Screen 
-        name="PuzzleDetail" 
+      <Stack.Screen
+        name="PuzzleDetail"
         component={PuzzleDetailScreen}
         options={{ title: 'Puzzle Details' }}
+      />
+    </Stack.Navigator>
+  );
+};
+
+// Profile Stack — includes login/register for unauthenticated users
+const ProfileStack = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#1a1a1a',
+        },
+        headerTintColor: '#FFD700',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}
+    >
+      <Stack.Screen
+        name="ProfileMain"
+        component={ProfileScreen}
+        options={{ title: 'Profile' }}
+      />
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{ title: 'Login', headerShown: false }}
+      />
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
+        options={{ title: 'Register', headerShown: false }}
       />
     </Stack.Navigator>
   );
@@ -51,28 +86,20 @@ export const MainNavigator = () => {
         headerShown: false,
       }}
     >
-      <Tab.Screen 
-        name="Home" 
+      <Tab.Screen
+        name="Home"
         component={HomeStack}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>🏠</Text>,
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>🏠</Text>,
         }}
       />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen}
+      <Tab.Screen
+        name="Profile"
+        component={ProfileStack}
         options={{
           tabBarLabel: 'Profile',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>👤</Text>,
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: '#1a1a1a',
-          },
-          headerTintColor: '#FFD700',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>👤</Text>,
         }}
       />
     </Tab.Navigator>
