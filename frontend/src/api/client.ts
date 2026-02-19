@@ -1,8 +1,10 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
+// For physical device, use your computer's IP address
 const API_URL = __DEV__ 
-  ? 'http://localhost:8080/api'  // Development
+  ? 'http://192.168.1.92:8080/api'  // Physical device on same WiFi
   : 'https://your-production-url.com/api';  // Production
 
 const apiClient = axios.create({
