@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { MainNavigator } from './MainNavigator';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
+import { colors } from '../constants/theme';
 
 export const AppNavigator = () => {
   const { loading } = useAuth();
@@ -11,7 +12,7 @@ export const AppNavigator = () => {
   if (loading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#FFD700" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -29,6 +30,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.backgroundAlt,
   },
 });

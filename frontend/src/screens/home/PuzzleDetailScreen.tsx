@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { usePuzzle } from '../../hooks/usePuzzles';
+import { colors, typography, spacing, borderRadius } from '../../constants/theme';
 
 export const PuzzleDetailScreen = ({ route, navigation }: any) => {
   const { puzzleId, isDaily } = route.params;
@@ -17,7 +18,7 @@ export const PuzzleDetailScreen = ({ route, navigation }: any) => {
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#FFD700" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -33,13 +34,13 @@ export const PuzzleDetailScreen = ({ route, navigation }: any) => {
   const getDifficultyColor = () => {
     switch (puzzle.difficulty) {
       case 'beginner':
-        return '#4CAF50';
+        return colors.success;
       case 'intermediate':
-        return '#FF9800';
+        return colors.warning;
       case 'expert':
-        return '#F44336';
+        return colors.danger;
       default:
-        return '#999';
+        return colors.textMuted;
     }
   };
 
@@ -167,137 +168,137 @@ export const PuzzleDetailScreen = ({ route, navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.backgroundAlt,
   },
   loading: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.backgroundAlt,
   },
   error: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.backgroundAlt,
   },
   errorText: {
-    color: '#ff4444',
-    fontSize: 16,
+    color: colors.error,
+    fontSize: typography.sizes.xxl,
   },
   header: {
-    padding: 20,
+    padding: spacing.xxxl,
     alignItems: 'center',
   },
   dailyBadge: {
-    backgroundColor: '#ff4444',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    marginBottom: 12,
+    backgroundColor: colors.error,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.sm,
+    marginBottom: spacing.lg,
   },
   dailyBadgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: colors.textPrimary,
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFD700',
+    fontSize: typography.sizes.h2,
+    fontWeight: typography.weights.bold,
+    color: colors.primary,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.lg,
   },
   difficultyBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.sm,
   },
   difficultyText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: colors.textPrimary,
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
   },
   section: {
-    padding: 20,
+    padding: spacing.xxxl,
     borderTopWidth: 1,
-    borderTopColor: '#2a2a2a',
+    borderTopColor: colors.borderLight,
   },
   description: {
-    fontSize: 16,
-    color: '#ccc',
+    fontSize: typography.sizes.xxl,
+    color: colors.textSecondary,
     lineHeight: 24,
     textAlign: 'center',
   },
   statsGrid: {
     flexDirection: 'row',
-    padding: 20,
-    gap: 12,
+    padding: spacing.xxxl,
+    gap: spacing.lg,
   },
   statBox: {
     flex: 1,
-    backgroundColor: '#2a2a2a',
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: colors.card,
+    padding: spacing.xxl,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFD700',
-    marginBottom: 4,
+    fontSize: typography.sizes.h2,
+    fontWeight: typography.weights.bold,
+    color: colors.primary,
+    marginBottom: spacing.xs,
   },
   statLabel: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: typography.sizes.base,
+    color: colors.textMuted,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFD700',
-    marginBottom: 16,
+    fontSize: typography.sizes.xxxl,
+    fontWeight: typography.weights.bold,
+    color: colors.primary,
+    marginBottom: spacing.xxl,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 8,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#2a2a2a',
+    borderBottomColor: colors.borderLight,
   },
   infoLabel: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: typography.sizes.lg,
+    color: colors.textMuted,
   },
   infoValue: {
-    fontSize: 14,
-    color: '#fff',
-    fontWeight: '600',
+    fontSize: typography.sizes.lg,
+    color: colors.textPrimary,
+    fontWeight: typography.weights.semibold,
   },
   tipItem: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: spacing.md,
   },
   tipBullet: {
-    color: '#FFD700',
-    fontSize: 16,
-    marginRight: 8,
+    color: colors.primary,
+    fontSize: typography.sizes.xxl,
+    marginRight: spacing.md,
   },
   tipText: {
     flex: 1,
-    fontSize: 14,
-    color: '#ccc',
+    fontSize: typography.sizes.lg,
+    color: colors.textSecondary,
     lineHeight: 20,
   },
   startButton: {
-    backgroundColor: '#FFD700',
-    marginHorizontal: 20,
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: colors.primary,
+    marginHorizontal: spacing.xxxl,
+    padding: spacing.xxl,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
   },
   startButtonText: {
-    color: '#1a1a1a',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: colors.textOnPrimary,
+    fontSize: typography.sizes.xxxl,
+    fontWeight: typography.weights.bold,
   },
 });

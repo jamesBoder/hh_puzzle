@@ -7,6 +7,7 @@ import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { RegisterScreen } from '../screens/auth/RegisterScreen';
 import { Text } from 'react-native';
+import { colors, typography } from '../constants/theme';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -17,11 +18,11 @@ const HomeStack = () => {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#1a1a1a',
+          backgroundColor: colors.backgroundAlt,
         },
-        headerTintColor: '#FFD700',
+        headerTintColor: colors.primary,
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontWeight: typography.weights.bold,
         },
       }}
     >
@@ -45,11 +46,11 @@ const ProfileStack = () => {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#1a1a1a',
+          backgroundColor: colors.backgroundAlt,
         },
-        headerTintColor: '#FFD700',
+        headerTintColor: colors.primary,
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontWeight: typography.weights.bold,
         },
       }}
     >
@@ -78,11 +79,11 @@ export const MainNavigator = () => {
     <Tab.Navigator
       screenOptions={{
         tabBarStyle: {
-          backgroundColor: '#1a1a1a',
-          borderTopColor: '#2a2a2a',
+          backgroundColor: colors.backgroundAlt,
+          borderTopColor: colors.borderLight,
         },
-        tabBarActiveTintColor: '#FFD700',
-        tabBarInactiveTintColor: '#999',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
         headerShown: false,
       }}
     >

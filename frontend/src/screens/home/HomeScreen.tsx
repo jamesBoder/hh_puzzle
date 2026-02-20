@@ -11,6 +11,7 @@ import {
 import { usePuzzles, useDailyChallenge } from '../../hooks/usePuzzles';
 import { PuzzleCard } from '../../components/puzzle/PuzzleCard';
 import { useAuth } from '../../hooks/useAuth';
+import { colors, typography, spacing, borders } from '../../constants/theme';
 
 export const HomeScreen = ({ navigation }: any) => {
   const { user } = useAuth();
@@ -104,7 +105,7 @@ export const HomeScreen = ({ navigation }: any) => {
       {/* Puzzle List */}
       {isLoading ? (
         <View style={styles.loading}>
-          <ActivityIndicator size="large" color="#FFD700" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>LOADING TRACKS...</Text>
         </View>
       ) : (
@@ -122,7 +123,7 @@ export const HomeScreen = ({ navigation }: any) => {
             <RefreshControl
               refreshing={isLoading}
               onRefresh={refetch}
-              tintColor="#FFD700"
+              tintColor={colors.primary}
             />
           }
           ListEmptyComponent={
@@ -140,84 +141,84 @@ export const HomeScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111111',
+    backgroundColor: colors.background,
   },
   // ── Vintage Header ──────────────────────────────────────
   header: {
-    paddingTop: 16,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
+    paddingTop: spacing.xxl,
+    paddingHorizontal: spacing.xxxl,
+    paddingBottom: spacing.lg,
     alignItems: 'center',
   },
   headerDivider: {
     width: '100%',
-    height: 2,
-    backgroundColor: '#FFD700',
-    marginVertical: 6,
+    height: borders.medium,
+    backgroundColor: colors.primary,
+    marginVertical: spacing.sm,
   },
   headerContent: {
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: spacing.sm,
   },
   headerLabel: {
-    fontSize: 10,
-    color: '#B8860B',
-    letterSpacing: 4,
-    fontWeight: '600',
-    marginBottom: 2,
+    fontSize: typography.sizes.sm,
+    color: colors.primaryDark,
+    letterSpacing: typography.letterSpacing.wider,
+    fontWeight: typography.weights.semibold,
+    marginBottom: spacing.xxs,
   },
   headerTitle: {
-    fontSize: 36,
-    fontWeight: '900',
-    color: '#FFD700',
-    letterSpacing: 8,
+    fontSize: typography.sizes.h1,
+    fontWeight: typography.weights.black,
+    color: colors.primary,
+    letterSpacing: typography.letterSpacing.widest,
   },
   headerSubtitle: {
-    fontSize: 10,
-    color: '#C8A951',
-    letterSpacing: 3,
-    marginTop: 2,
+    fontSize: typography.sizes.sm,
+    color: colors.primaryMid,
+    letterSpacing: typography.letterSpacing.wide,
+    marginTop: spacing.xxs,
   },
   // ── Stats Bar ───────────────────────────────────────────
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#3a3020',
-    backgroundColor: '#1e1a0e',
+    marginHorizontal: spacing.xxxl,
+    marginBottom: spacing.xl,
+    paddingVertical: spacing.base,
+    borderWidth: borders.thin,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
   },
   statItem: {
     alignItems: 'center',
     flex: 1,
   },
   statValue: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#FFD700',
-    letterSpacing: 1,
+    fontSize: typography.sizes.h3,
+    fontWeight: typography.weights.black,
+    color: colors.primary,
+    letterSpacing: typography.letterSpacing.tight,
   },
   statLabel: {
-    fontSize: 9,
-    color: '#8a7a40',
-    letterSpacing: 3,
-    marginTop: 2,
+    fontSize: typography.sizes.xs,
+    color: colors.primaryMuted,
+    letterSpacing: typography.letterSpacing.wide,
+    marginTop: spacing.xxs,
   },
   statDivider: {
     width: 1,
     height: 30,
-    backgroundColor: '#3a3020',
+    backgroundColor: colors.border,
   },
   // ── Daily Challenge (Cassette Style) ────────────────────
   dailyChallenge: {
-    marginHorizontal: 20,
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: '#FFD700',
-    backgroundColor: '#1a1500',
+    marginHorizontal: spacing.xxxl,
+    marginBottom: spacing.xxl,
+    borderWidth: borders.medium,
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceDark,
   },
   dailyInner: {
     flexDirection: 'row',
@@ -227,95 +228,95 @@ const styles = StyleSheet.create({
     width: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRightWidth: 2,
-    borderRightColor: '#FFD700',
-    paddingVertical: 14,
-    backgroundColor: '#FFD700',
+    borderRightWidth: borders.medium,
+    borderRightColor: colors.primary,
+    paddingVertical: spacing.xl,
+    backgroundColor: colors.primary,
   },
   dailySideLabelText: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#1a1a1a',
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.black,
+    color: colors.textOnPrimary,
     textAlign: 'center',
-    letterSpacing: 1,
+    letterSpacing: typography.letterSpacing.tight,
   },
   dailyContent: {
     flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.base,
   },
   dailyTag: {
-    fontSize: 9,
-    color: '#B8860B',
-    letterSpacing: 3,
-    marginBottom: 4,
+    fontSize: typography.sizes.xs,
+    color: colors.primaryDark,
+    letterSpacing: typography.letterSpacing.wide,
+    marginBottom: spacing.xs,
   },
   dailyPuzzle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#FFD700',
-    letterSpacing: 1,
-    marginBottom: 4,
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.extrabold,
+    color: colors.primary,
+    letterSpacing: typography.letterSpacing.tight,
+    marginBottom: spacing.xs,
   },
   dailyDescription: {
-    fontSize: 9,
-    color: '#8a7a40',
-    letterSpacing: 2,
+    fontSize: typography.sizes.xs,
+    color: colors.primaryMuted,
+    letterSpacing: typography.letterSpacing.normal,
   },
   dailyArrow: {
-    paddingHorizontal: 14,
+    paddingHorizontal: spacing.xl,
   },
   dailyArrowText: {
-    fontSize: 18,
-    color: '#FFD700',
+    fontSize: typography.sizes.xxxl,
+    color: colors.primary,
   },
   // ── Section Header ──────────────────────────────────────
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 12,
+    marginHorizontal: spacing.xxxl,
+    marginBottom: spacing.lg,
   },
   sectionLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#3a3020',
+    backgroundColor: colors.border,
   },
   sectionLabel: {
-    fontSize: 10,
-    color: '#8a7a40',
-    letterSpacing: 4,
-    marginHorizontal: 10,
-    fontWeight: '700',
+    fontSize: typography.sizes.sm,
+    color: colors.primaryMuted,
+    letterSpacing: typography.letterSpacing.wider,
+    marginHorizontal: spacing.base,
+    fontWeight: typography.weights.bold,
   },
   // ── List ────────────────────────────────────────────────
   listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: spacing.xxxl,
+    paddingBottom: spacing.xxxl,
   },
   loading: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.lg,
   },
   loadingText: {
-    fontSize: 11,
-    color: '#8a7a40',
-    letterSpacing: 4,
+    fontSize: typography.sizes.md,
+    color: colors.primaryMuted,
+    letterSpacing: typography.letterSpacing.wider,
   },
   emptyState: {
-    padding: 40,
+    padding: spacing.hero,
     alignItems: 'center',
   },
   emptyIcon: {
     fontSize: 32,
-    color: '#3a3020',
-    marginBottom: 12,
+    color: colors.border,
+    marginBottom: spacing.lg,
   },
   emptyText: {
-    fontSize: 12,
-    color: '#8a7a40',
-    letterSpacing: 4,
+    fontSize: typography.sizes.base,
+    color: colors.primaryMuted,
+    letterSpacing: typography.letterSpacing.wider,
   },
 });

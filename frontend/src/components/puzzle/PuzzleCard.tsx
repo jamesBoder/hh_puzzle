@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Puzzle } from '../../api/types';
+import { colors, typography, spacing, borders } from '../../constants/theme';
 
 interface PuzzleCardProps {
   puzzle: Puzzle;
@@ -19,10 +20,10 @@ export const PuzzleCard: React.FC<PuzzleCardProps> = ({ puzzle, onPress }) => {
 
   const getDifficultyColor = () => {
     switch (puzzle.difficulty) {
-      case 'beginner':     return '#4a7c4e';
-      case 'intermediate': return '#8a6a1a';
-      case 'expert':       return '#7c2a2a';
-      default:             return '#444';
+      case 'beginner':     return colors.difficultyEasy;
+      case 'intermediate': return colors.difficultyMedium;
+      case 'expert':       return colors.difficultyHard;
+      default:             return colors.borderLight;
     }
   };
 
@@ -78,76 +79,76 @@ export const PuzzleCard: React.FC<PuzzleCardProps> = ({ puzzle, onPress }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1a1600',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#3a3020',
-    borderLeftWidth: 4,
-    borderLeftColor: '#FFD700',
-    padding: 14,
+    backgroundColor: colors.surface,
+    marginBottom: spacing.lg,
+    borderWidth: borders.thin,
+    borderColor: colors.border,
+    borderLeftWidth: borders.thick,
+    borderLeftColor: colors.primary,
+    padding: spacing.xl,
   },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.md,
   },
   catalogNumber: {
-    fontSize: 9,
-    color: '#6a5a20',
-    letterSpacing: 3,
-    fontWeight: '700',
+    fontSize: typography.sizes.xs,
+    color: colors.primaryFaint,
+    letterSpacing: typography.letterSpacing.wide,
+    fontWeight: typography.weights.bold,
   },
   difficultyBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: spacing.md,
     paddingVertical: 3,
-    borderWidth: 1,
-    borderColor: '#5a4a10',
+    borderWidth: borders.thin,
+    borderColor: colors.borderFaint,
   },
   difficultyText: {
-    color: '#E8D5A3',
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 2,
+    color: colors.primaryMid,
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.black,
+    letterSpacing: typography.letterSpacing.normal,
   },
   title: {
-    fontSize: 15,
-    fontWeight: '900',
-    color: '#FFD700',
-    letterSpacing: 1,
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.black,
+    color: colors.primary,
+    letterSpacing: typography.letterSpacing.tight,
     lineHeight: 20,
-    marginBottom: 10,
+    marginBottom: spacing.base,
   },
   divider: {
     height: 1,
-    backgroundColor: '#3a3020',
-    marginBottom: 10,
+    backgroundColor: colors.border,
+    marginBottom: spacing.base,
   },
   metadata: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: spacing.base,
   },
   metaItem: {
     flex: 1,
   },
   metaLabel: {
-    fontSize: 8,
-    color: '#6a5a20',
-    letterSpacing: 2,
-    marginBottom: 2,
+    fontSize: typography.sizes.xxs,
+    color: colors.primaryFaint,
+    letterSpacing: typography.letterSpacing.normal,
+    marginBottom: spacing.xxs,
   },
   metaValue: {
-    fontSize: 12,
-    color: '#C8A951',
-    fontWeight: '700',
-    letterSpacing: 1,
+    fontSize: typography.sizes.base,
+    color: colors.primaryMid,
+    fontWeight: typography.weights.bold,
+    letterSpacing: typography.letterSpacing.tight,
   },
   metaSep: {
     width: 1,
     height: 28,
-    backgroundColor: '#3a3020',
-    marginHorizontal: 10,
+    backgroundColor: colors.border,
+    marginHorizontal: spacing.base,
   },
   footer: {
     flexDirection: 'row',
@@ -155,14 +156,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   time: {
-    fontSize: 9,
-    color: '#6a5a20',
-    letterSpacing: 3,
+    fontSize: typography.sizes.xs,
+    color: colors.primaryFaint,
+    letterSpacing: typography.letterSpacing.wide,
   },
   playLabel: {
-    fontSize: 10,
-    color: '#FFD700',
-    fontWeight: '900',
-    letterSpacing: 2,
+    fontSize: typography.sizes.sm,
+    color: colors.primary,
+    fontWeight: typography.weights.black,
+    letterSpacing: typography.letterSpacing.normal,
   },
 });

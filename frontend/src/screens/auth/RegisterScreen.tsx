@@ -12,6 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
+import { colors, typography, spacing, borderRadius } from '../../constants/theme';
 
 export const RegisterScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
@@ -95,7 +96,7 @@ export const RegisterScreen = ({ navigation }: any) => {
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.textPrimary} />
               ) : (
                 <Text style={styles.buttonText}>Register</Text>
               )}
@@ -126,7 +127,7 @@ export const RegisterScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.backgroundAlt,
   },
   scrollContent: {
     flexGrow: 1,
@@ -134,62 +135,62 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
-    padding: 20,
+    padding: spacing.xxxl,
   },
   title: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#FFD700',
+    fontSize: typography.sizes.h1,
+    fontWeight: typography.weights.bold,
+    color: colors.primary,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: spacing.base,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#fff',
+    fontSize: typography.sizes.xxl,
+    color: colors.textPrimary,
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: spacing.page,
   },
   form: {
     width: '100%',
   },
   input: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    fontSize: 16,
+    backgroundColor: colors.textPrimary,
+    padding: spacing.xxl,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.xxl,
+    fontSize: typography.sizes.xxl,
   },
   button: {
-    backgroundColor: '#FFD700',
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: colors.primary,
+    padding: spacing.xxl,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: spacing.base,
   },
   buttonText: {
-    color: '#1a1a1a',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: colors.textOnPrimary,
+    fontSize: typography.sizes.xxxl,
+    fontWeight: typography.weights.bold,
   },
   linkButton: {
-    marginTop: 20,
+    marginTop: spacing.xxxl,
     alignItems: 'center',
   },
   linkText: {
-    color: '#FFD700',
-    fontSize: 16,
+    color: colors.primary,
+    fontSize: typography.sizes.xxl,
   },
   error: {
-    color: '#ff4444',
-    marginBottom: 10,
+    color: colors.error,
+    marginBottom: spacing.base,
     textAlign: 'center',
   },
   backButton: {
-    marginTop: 12,
+    marginTop: spacing.lg,
     alignItems: 'center',
   },
   backText: {
-    color: '#999',
-    fontSize: 15,
+    color: colors.textMuted,
+    fontSize: typography.sizes.xl,
   },
 });

@@ -76,3 +76,4 @@ docs/
 
 # .sh files
 *.sh
+.blackboxcli/
