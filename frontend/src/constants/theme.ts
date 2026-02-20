@@ -51,6 +51,17 @@ export const theme = {
     success: '#4CAF50',
     warning: '#FF9800',
     danger: '#F44336',
+
+    // ── Crossword grid ──
+    cellBackground: '#F5F0E0',   // warm off-white — vintage paper
+    cellBorder: '#888877',       // cell grid line
+    cellBlack: '#111111',        // blocked cell fill
+    cellBlackBorder: '#000000',  // blocked cell border
+    cellWordHighlight: '#3a2e00',// active word highlight (dark warm gold)
+    cellRevealed: '#1a2e1a',     // hint-revealed cell bg (dark green)
+    cellRevealedText: '#5aaa5a', // hint-revealed letter colour
+    cellClueNum: '#555544',      // small clue number inside cell
+    keyBackground: '#2e2a1a',    // keyboard key background
   },
 
   // ── Typography ────────────────────────────────────────────────────────────

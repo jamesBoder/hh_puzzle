@@ -16,7 +16,7 @@ import { colors, typography, spacing, borders } from '../../constants/theme';
 export const HomeScreen = ({ navigation }: any) => {
   const { user } = useAuth();
 
-  const { data: puzzles, isLoading, refetch } = usePuzzles({});
+  const { data: puzzles, isLoading, isError, error, refetch } = usePuzzles({});
 
   const { data: dailyChallenge } = useDailyChallenge();
 
@@ -39,7 +39,7 @@ export const HomeScreen = ({ navigation }: any) => {
       <View style={styles.header}>
         <View style={styles.headerDivider} />
         <View style={styles.headerContent}>
-          <Text style={styles.headerLabel}>◆ EST. 1973 ◆</Text>
+          <Text style={styles.headerLabel}>◆ EST. 19780 ◆</Text>
           <Text style={styles.headerTitle}>HH PUZZLE</Text>
           <Text style={styles.headerSubtitle}>
             {user ? `WELCOME BACK, ${user.username.toUpperCase()}` : 'HIP-HOP CROSSWORD SERIES'}
@@ -107,6 +107,17 @@ export const HomeScreen = ({ navigation }: any) => {
         <View style={styles.loading}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>LOADING TRACKS...</Text>
+        </View>
+      ) : isError ? (
+        <View style={styles.errorState}>
+          <Text style={styles.errorIcon}>⚠</Text>
+          <Text style={styles.errorText}>NETWORK ERROR</Text>
+          <Text style={styles.errorDetail} selectable>
+            {(error as any)?.message || 'Could not reach server'}
+          </Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <Text style={styles.retryText}>RETRY</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
@@ -318,5 +329,40 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.base,
     color: colors.primaryMuted,
     letterSpacing: typography.letterSpacing.wider,
+  },
+  errorState: {
+    padding: spacing.hero,
+    alignItems: 'center',
+  },
+  errorIcon: {
+    fontSize: 32,
+    color: colors.primary,
+    marginBottom: spacing.lg,
+  },
+  errorText: {
+    fontSize: typography.sizes.base,
+    color: colors.primary,
+    letterSpacing: typography.letterSpacing.wider,
+    fontWeight: typography.weights.bold,
+    marginBottom: spacing.sm,
+  },
+  errorDetail: {
+    fontSize: typography.sizes.sm,
+    color: colors.primaryMuted,
+    textAlign: 'center',
+    marginBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
+  },
+  retryButton: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.base,
+  },
+  retryText: {
+    fontSize: typography.sizes.sm,
+    color: colors.primary,
+    letterSpacing: typography.letterSpacing.wider,
+    fontWeight: typography.weights.bold,
   },
 });

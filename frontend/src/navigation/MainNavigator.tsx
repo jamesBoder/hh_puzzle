@@ -6,6 +6,8 @@ import { PuzzleDetailScreen } from '../screens/home/PuzzleDetailScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { RegisterScreen } from '../screens/auth/RegisterScreen';
+import { GameScreen } from '../screens/game/GameScreen';
+import { GameCompleteScreen } from '../screens/game/GameCompleteScreen';
 import { Text } from 'react-native';
 import { colors, typography } from '../constants/theme';
 
@@ -35,6 +37,16 @@ const HomeStack = () => {
         name="PuzzleDetail"
         component={PuzzleDetailScreen}
         options={{ title: 'Puzzle Details' }}
+      />
+      <Stack.Screen
+        name="Game"
+        component={GameScreen}
+        options={{ title: 'Play', headerShown: false }}
+      />
+      <Stack.Screen
+        name="GameComplete"
+        component={GameCompleteScreen}
+        options={{ title: 'Results', headerShown: false }}
       />
     </Stack.Navigator>
   );

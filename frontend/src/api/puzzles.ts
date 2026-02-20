@@ -26,7 +26,7 @@ export const puzzlesAPI = {
 
   // Start puzzle attempt
   startAttempt: async (puzzleId: number): Promise<PuzzleAttempt> => {
-    const response = await apiClient.post('/attempts', {
+    const response = await apiClient.post('/attempts/start', {
       puzzle_id: puzzleId,
     });
     return response.data;
@@ -41,13 +41,13 @@ export const puzzlesAPI = {
       hints_used: number;
     }
   ): Promise<PuzzleAttempt> => {
-    const response = await apiClient.put(`/attempts/${attemptId}`, data);
+    const response = await apiClient.post(`/attempts/${attemptId}/submit`, data);
     return response.data;
   },
 
   // Get user's attempts
   getUserAttempts: async (): Promise<PuzzleAttempt[]> => {
-    const response = await apiClient.get('/attempts/me');
+    const response = await apiClient.get('/attempts');
     return response.data;
   },
 };

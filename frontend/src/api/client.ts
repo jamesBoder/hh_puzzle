@@ -2,9 +2,9 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
-// For physical device, use your computer's IP address
+// ngrok tunnel — exposes WSL2 backend to physical device/emulator
 const API_URL = __DEV__ 
-  ? 'http://192.168.1.92:8080/api'  // Physical device on same WiFi
+  ? 'https://bistred-aleen-epistemically.ngrok-free.dev/api'  // ngrok tunnel → WSL2 backend
   : 'https://your-production-url.com/api';  // Production
 
 const apiClient = axios.create({
@@ -12,6 +12,8 @@ const apiClient = axios.create({
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
+    // Required to bypass ngrok's browser interstitial warning page
+    'ngrok-skip-browser-warning': 'true',
   },
 });
 
@@ -29,18 +31,30 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
+// Response interceptor — unwrap backend envelope { success, data, ... } → data
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // All backend responses are wrapped: { success: bool, data: <payload>, ... }
+    // Unwrap so callers receive the payload directly via response.data
+    if (
+      response.data &&
+      typeof response.data === 'object' &&
+      'success' in response.data &&
+      'data' in response.data
+    ) {
+      response.data = response.data.data;
+    }
+    return response;
+  },
   async (error) => {
     if (error.response?.status === 401) {
       // Token expired, clear storage and redirect to login
       await AsyncStorage.removeItem('auth_token');
       await AsyncStorage.removeItem('user');
-      // Navigation will be handled by the app
     }
     return Promise.reject(error);
   }
+
 );
 
 export default apiClient;

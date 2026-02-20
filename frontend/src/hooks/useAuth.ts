@@ -16,9 +16,10 @@ export const useAuth = () => {
   const checkAuth = async () => {
     try {
       const token = await AsyncStorage.getItem('auth_token');
-      if (token) {
-        const userData = await authAPI.getCurrentUser();
-        setUser(userData);
+      const storedUser = await AsyncStorage.getItem('user');
+      if (token && storedUser) {
+        // Restore user from local storage — avoids a network call on every app start
+        setUser(JSON.parse(storedUser));
       }
     } catch (err) {
       console.error('Auth check failed:', err);
