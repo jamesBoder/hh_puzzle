@@ -68,7 +68,10 @@ export const useGame = (puzzle: Puzzle) => {
           newCells[key] = { letter: '', isBlack: false, isRevealed: false };
         }
         if (i === 0) {
-          newCells[key].clueNumber = parseInt(num, 10);
+          const parsed = parseInt(num, 10);
+          if (!isNaN(parsed)) {
+            newCells[key].clueNumber = parsed;
+          }
         }
         maxX = Math.max(maxX, x);
         maxY = Math.max(maxY, y);
@@ -86,7 +89,10 @@ export const useGame = (puzzle: Puzzle) => {
         }
         // Only assign clue number if not already set by an across clue
         if (i === 0 && !newCells[key].clueNumber) {
-          newCells[key].clueNumber = parseInt(num, 10);
+          const parsed = parseInt(num, 10);
+          if (!isNaN(parsed)) {
+            newCells[key].clueNumber = parsed;
+          }
         }
         maxX = Math.max(maxX, x);
         maxY = Math.max(maxY, y);

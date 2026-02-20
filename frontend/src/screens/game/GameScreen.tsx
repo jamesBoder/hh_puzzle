@@ -6,12 +6,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { usePuzzle } from '../../hooks/usePuzzles';
 import { useGame } from '../../hooks/useGame';
 import { CrosswordGrid } from '../../components/crossword/CrosswordGrid';
-import { ClueList } from '../../components/crossword/ClueList';
 import { colors, typography, spacing, borders } from '../../constants/theme';
 
 // ── Keyboard layout ────────────────────────────────────────────────────────
@@ -30,11 +30,24 @@ const formatTime = (seconds: number): string => {
   return `${m}:${s}`;
 };
 
+// Combined height of hint panel (~44px) + keyboard (~130px) + action row (~48px)
+const BOTTOM_FIXED_HEIGHT = 222;
+
 // ── Component ──────────────────────────────────────────────────────────────
 
 export const GameScreen = ({ route, navigation }: any) => {
   const { puzzleId } = route.params;
   const { data: puzzle, isLoading } = usePuzzle(puzzleId);
+
+  // ── Hide bottom tab bar for the entire game session ──────────────────────
+  useFocusEffect(
+    useCallback(() => {
+      navigation.getParent()?.setOptions({ tabBarStyle: { display: 'none' } });
+      return () => {
+        navigation.getParent()?.setOptions({ tabBarStyle: undefined });
+      };
+    }, [navigation])
+  );
 
   // ── Loading / error states ───────────────────────────────────────────────
 
@@ -67,8 +80,8 @@ const GameBoard = ({ puzzle, navigation }: any) => {
     submitPuzzle,
     getSelectedWordCells,
     getActiveClue,
-    selectClue,
   } = useGame(puzzle);
+
 
   const selectedWordCells = useMemo(
     () => getSelectedWordCells(),
@@ -134,18 +147,32 @@ const GameBoard = ({ puzzle, navigation }: any) => {
     );
   }, [revealHint]);
 
+  // ── Menu ──────────────────────────────────────────────────────────────────
+
+  const handleMenu = useCallback(() => {
+    Alert.alert(
+      'MENU',
+      undefined,
+      [
+        { text: 'Home', onPress: () => navigation.navigate('Home') },
+        { text: 'Profile', onPress: () => navigation.navigate('Profile') },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  }, [navigation]);
+
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* ── Scrollable content ──────────────────────────────────────────── */}
+      <View style={styles.scrollContent}>
+
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={styles.puzzleTitle} numberOfLines={1}>
             {puzzle.title.replace(/ #[a-f0-9]{6}$/, '').toUpperCase()}
-          </Text>
-          <Text style={styles.difficultyLabel}>
-            {puzzle.difficulty.toUpperCase()}
           </Text>
         </View>
         <View style={styles.headerRight}>
@@ -171,41 +198,25 @@ const GameBoard = ({ puzzle, navigation }: any) => {
         />
       </View>
 
-      {/* ── Active clue bar ─────────────────────────────────────────────── */}
-      <View style={styles.activeClueBar}>
+      </View>{/* end scrollContent */}
+
+      {/* ── Fixed bottom: Hint panel + Keyboard + Action row ────────────── */}
+      <View style={styles.bottomFixed}>
+
+      {/* ── Hint panel (selected entry only) ────────────────────────────── */}
+      <View style={styles.hintPanel}>
         {activeClue ? (
           <>
-            <Text style={styles.activeClueNum}>
-              {activeClue.number} {activeClue.direction.toUpperCase()}
+            <Text style={styles.hintPanelLabel}>
+              {activeClue.number}{activeClue.direction === 'across' ? 'A' : 'D'}. {activeClue.direction.toUpperCase()}
             </Text>
-            <Text style={styles.activeClueText} numberOfLines={2}>
+            <Text style={styles.hintPanelText} numberOfLines={2}>
               {activeClue.text}
             </Text>
           </>
         ) : (
-          <Text style={styles.activeClueText}>Select a cell to begin</Text>
+          <Text style={styles.hintPanelPlaceholder}>Select a cell to see its clue</Text>
         )}
-      </View>
-
-      {/* ── Clue list ───────────────────────────────────────────────────── */}
-      <View style={styles.clueListWrapper}>
-        <ClueList
-          cluesAcross={puzzle.clues_across}
-          cluesDown={puzzle.clues_down}
-          activeClueNumber={activeClue?.number ?? null}
-          activeDirection={activeClue?.direction ?? direction}
-          onCluePress={selectClue}
-        />
-      </View>
-
-      {/* ── Action row (hint + submit) ───────────────────────────────────── */}
-      <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.hintButton} onPress={handleHint} activeOpacity={0.8}>
-          <Text style={styles.hintButtonText}>◈ HINT</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} activeOpacity={0.8}>
-          <Text style={styles.submitButtonText}>SUBMIT ▶</Text>
-        </TouchableOpacity>
       </View>
 
       {/* ── Custom keyboard ─────────────────────────────────────────────── */}
@@ -230,6 +241,21 @@ const GameBoard = ({ puzzle, navigation }: any) => {
           </View>
         ))}
       </View>
+
+      {/* ── Action row (menu + reveal + submit) ─────────────────────────── */}
+      <View style={styles.actionRow}>
+        <TouchableOpacity style={styles.menuButton} onPress={handleMenu} activeOpacity={0.8}>
+          <Text style={styles.menuButtonText}>☰</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.hintButton} onPress={handleHint} activeOpacity={0.8}>
+          <Text style={styles.hintButtonText}>◈ REVEAL</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} activeOpacity={0.8}>
+          <Text style={styles.submitButtonText}>SUBMIT ▶</Text>
+        </TouchableOpacity>
+      </View>
+
+      </View>{/* end bottomFixed */}
     </SafeAreaView>
   );
 };
@@ -274,12 +300,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
     letterSpacing: typography.letterSpacing.wide,
   },
-  difficultyLabel: {
-    fontSize: typography.sizes.xxs,
-    color: colors.primaryMuted,
-    letterSpacing: typography.letterSpacing.wider,
-    marginTop: 2,
-  },
   headerRight: {
     flexDirection: 'row',
     gap: spacing.lg,
@@ -316,23 +336,23 @@ const styles = StyleSheet.create({
   },
   // ── Grid ──────────────────────────────────────────────────────────────────
   gridWrapper: {
+    flex: 1,
     backgroundColor: colors.backgroundAlt,
     borderBottomWidth: borders.thin,
     borderBottomColor: colors.border,
-    maxHeight: 300,
   },
-  // ── Active clue bar ────────────────────────────────────────────────────────
-  activeClueBar: {
+  // ── Hint panel (single selected entry) ───────────────────────────────────
+  hintPanel: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.xxxl,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     backgroundColor: colors.surfaceAlt,
     borderBottomWidth: borders.thin,
     borderBottomColor: colors.border,
     minHeight: 44,
   },
-  activeClueNum: {
+  hintPanelLabel: {
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.black,
     color: colors.primary,
@@ -340,17 +360,17 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
     minWidth: 52,
   },
-  activeClueText: {
+  hintPanelText: {
     flex: 1,
     fontSize: typography.sizes.base,
     color: colors.textSecondary,
     lineHeight: 16,
   },
-  // ── Clue list ──────────────────────────────────────────────────────────────
-  clueListWrapper: {
+  hintPanelPlaceholder: {
     flex: 1,
-    borderBottomWidth: borders.thin,
-    borderBottomColor: colors.border,
+    fontSize: typography.sizes.base,
+    color: colors.primaryMuted,
+    fontStyle: 'italic',
   },
   // ── Action row ─────────────────────────────────────────────────────────────
   actionRow: {
@@ -359,8 +379,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     gap: spacing.lg,
     backgroundColor: colors.background,
-    borderTopWidth: borders.thin,
-    borderTopColor: colors.border,
   },
   hintButton: {
     flex: 1,
@@ -392,8 +410,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundAlt,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
-    borderTopWidth: borders.medium,
-    borderTopColor: colors.border,
   },
   keyRow: {
     flexDirection: 'row',
@@ -425,5 +441,33 @@ const styles = StyleSheet.create({
   specialKeyText: {
     fontSize: typography.sizes.md,
     color: colors.primary,
+  },
+  // ── Scroll content wrapper ─────────────────────────────────────────────────
+  scrollContent: {
+    flex: 1,
+    paddingBottom: BOTTOM_FIXED_HEIGHT,
+  },
+  // ── Fixed bottom wrapper ───────────────────────────────────────────────────
+  bottomFixed: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.background,
+    borderTopWidth: borders.medium,
+    borderTopColor: colors.border,
+  },
+  // ── Menu button ────────────────────────────────────────────────────────────
+  menuButton: {
+    width: 44,
+    paddingVertical: spacing.md,
+    borderWidth: borders.thin,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuButtonText: {
+    fontSize: typography.sizes.lg,
+    color: colors.primaryMuted,
   },
 });

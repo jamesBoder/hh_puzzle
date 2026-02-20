@@ -9,24 +9,6 @@ interface PuzzleCardProps {
 }
 
 export const PuzzleCard: React.FC<PuzzleCardProps> = ({ puzzle, onPress }) => {
-  const getDifficultyLabel = () => {
-    switch (puzzle.difficulty) {
-      case 'beginner':   return 'EASY';
-      case 'intermediate': return 'MED';
-      case 'expert':     return 'HARD';
-      default:           return '—';
-    }
-  };
-
-  const getDifficultyColor = () => {
-    switch (puzzle.difficulty) {
-      case 'beginner':     return colors.difficultyEasy;
-      case 'intermediate': return colors.difficultyMedium;
-      case 'expert':       return colors.difficultyHard;
-      default:             return colors.borderLight;
-    }
-  };
-
   // Strip the hash suffix from title for cleaner display
   const cleanTitle = puzzle.title.replace(/ #[a-f0-9]{6}$/, '');
 
@@ -37,9 +19,6 @@ export const PuzzleCard: React.FC<PuzzleCardProps> = ({ puzzle, onPress }) => {
         <Text style={styles.catalogNumber}>
           {`VOL. ${String(puzzle.id).padStart(3, '0')}`}
         </Text>
-        <View style={[styles.difficultyBadge, { backgroundColor: getDifficultyColor() }]}>
-          <Text style={styles.difficultyText}>{getDifficultyLabel()}</Text>
-        </View>
       </View>
 
       {/* Title */}
@@ -98,18 +77,6 @@ const styles = StyleSheet.create({
     color: colors.primaryFaint,
     letterSpacing: typography.letterSpacing.wide,
     fontWeight: typography.weights.bold,
-  },
-  difficultyBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 3,
-    borderWidth: borders.thin,
-    borderColor: colors.borderFaint,
-  },
-  difficultyText: {
-    color: colors.primaryMid,
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.black,
-    letterSpacing: typography.letterSpacing.normal,
   },
   title: {
     fontSize: typography.sizes.xl,

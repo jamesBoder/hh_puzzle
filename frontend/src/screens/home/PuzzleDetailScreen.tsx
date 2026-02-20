@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { usePuzzle } from '../../hooks/usePuzzles';
 import { colors, typography, spacing, borderRadius } from '../../constants/theme';
 
@@ -31,19 +32,6 @@ export const PuzzleDetailScreen = ({ route, navigation }: any) => {
     );
   }
 
-  const getDifficultyColor = () => {
-    switch (puzzle.difficulty) {
-      case 'beginner':
-        return colors.success;
-      case 'intermediate':
-        return colors.warning;
-      case 'expert':
-        return colors.danger;
-      default:
-        return colors.textMuted;
-    }
-  };
-
   const handleStartPuzzle = () => {
     navigation.navigate('Game', { puzzleId: puzzle.id });
   };
@@ -53,6 +41,7 @@ export const PuzzleDetailScreen = ({ route, navigation }: any) => {
   const totalClues = cluesAcrossCount + cluesDownCount;
 
   return (
+    <SafeAreaView style={styles.safeArea}>
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
@@ -63,17 +52,6 @@ export const PuzzleDetailScreen = ({ route, navigation }: any) => {
         )}
         
         <Text style={styles.title}>{puzzle.title}</Text>
-        
-        <View
-          style={[
-            styles.difficultyBadge,
-            { backgroundColor: getDifficultyColor() },
-          ]}
-        >
-          <Text style={styles.difficultyText}>
-            {puzzle.difficulty.toUpperCase()}
-          </Text>
-        </View>
       </View>
 
       {/* Description */}
@@ -162,10 +140,15 @@ export const PuzzleDetailScreen = ({ route, navigation }: any) => {
 
       <View style={{ height: 40 }} />
     </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.backgroundAlt,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.backgroundAlt,
@@ -208,16 +191,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
     textAlign: 'center',
     marginBottom: spacing.lg,
-  },
-  difficultyBadge: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.sm,
-  },
-  difficultyText: {
-    color: colors.textPrimary,
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
   },
   section: {
     padding: spacing.xxxl,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Animated,
+  Pressable,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePuzzles, useDailyChallenge } from '../../hooks/usePuzzles';
 import { PuzzleCard } from '../../components/puzzle/PuzzleCard';
 import { useAuth } from '../../hooks/useAuth';
@@ -15,6 +18,31 @@ import { colors, typography, spacing, borders } from '../../constants/theme';
 
 export const HomeScreen = ({ navigation }: any) => {
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
+
+  // ── Title glow animation ─────────────────────────────────────────────────
+  const glowAnim = useRef(new Animated.Value(0)).current;
+
+  const handleTitlePressIn = () => {
+    Animated.timing(glowAnim, {
+      toValue: 1,
+      duration: 150,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const handleTitlePressOut = () => {
+    Animated.timing(glowAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const glowShadowRadius = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 18],
+  });
 
   const { data: puzzles, isLoading, isError, error, refetch } = usePuzzles({});
 
@@ -34,13 +62,26 @@ export const HomeScreen = ({ navigation }: any) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Vintage Header */}
       <View style={styles.header}>
         <View style={styles.headerDivider} />
         <View style={styles.headerContent}>
           <Text style={styles.headerLabel}>◆ EST. 19780 ◆</Text>
-          <Text style={styles.headerTitle}>HH PUZZLE</Text>
+          <Pressable onPressIn={handleTitlePressIn} onPressOut={handleTitlePressOut}>
+            <Animated.Text
+              style={[
+                styles.headerTitle,
+                {
+                  textShadowColor: colors.primary,
+                  textShadowOffset: { width: 0, height: 0 },
+                  textShadowRadius: glowShadowRadius,
+                },
+              ]}
+            >
+              HH PUZZLE
+            </Animated.Text>
+          </Pressable>
           <Text style={styles.headerSubtitle}>
             {user ? `WELCOME BACK, ${user.username.toUpperCase()}` : 'HIP-HOP CROSSWORD SERIES'}
           </Text>
@@ -156,7 +197,7 @@ const styles = StyleSheet.create({
   },
   // ── Vintage Header ──────────────────────────────────────
   header: {
-    paddingTop: spacing.xxl,
+    paddingTop: spacing.lg,
     paddingHorizontal: spacing.xxxl,
     paddingBottom: spacing.lg,
     alignItems: 'center',

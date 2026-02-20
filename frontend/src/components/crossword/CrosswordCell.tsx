@@ -65,7 +65,7 @@ export const CrosswordCell: React.FC<CrosswordCellProps> = ({
       onPress={onPress}
       activeOpacity={0.75}
     >
-      {clueNumber !== undefined && (
+      {clueNumber !== undefined && !isNaN(clueNumber) && (
         <Text
           style={[
             styles.clueNumber,
