@@ -2,6 +2,9 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import { colors } from '../../constants/theme';
 
+// ── Amber accent (Crate Digger theme) applied to selected cell ────────────
+// colors.primaryAmber (#c8832a) replaces the bright gold (#FFD700) 
+
 interface CrosswordCellProps {
   letter: string;
   isBlack: boolean;
@@ -37,7 +40,7 @@ export const CrosswordCell: React.FC<CrosswordCellProps> = ({
 
   // ── Background colour logic ──────────────────────────────────────────────
   const getCellBackground = () => {
-    if (isSelected) return colors.primary;
+    if (isSelected) return colors.primaryAmber;       // warm amber (Crate Digger)
     if (isInSelectedWord) return colors.cellWordHighlight;
     if (isRevealed) return colors.cellRevealed;
     return colors.cellBackground;
@@ -70,6 +73,8 @@ export const CrosswordCell: React.FC<CrosswordCellProps> = ({
           style={[
             styles.clueNumber,
             { fontSize: numFontSize, lineHeight: numFontSize + 2 },
+            // On selected cell, invert the clue number to stay readable on amber bg
+            isSelected && { color: colors.textOnPrimary },
           ]}
         >
           {clueNumber}

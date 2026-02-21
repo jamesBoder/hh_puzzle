@@ -18,7 +18,8 @@ export interface GridDimensions {
 }
 
 export interface ActiveClueInfo {
-  number: string;
+  number: string;        // raw API key (used for clue lookup)
+  visualNumber?: number; // position-based cell number shown on the grid
   text: string;
   direction: 'across' | 'down';
 }
@@ -59,7 +60,7 @@ export const useGame = (puzzle: Puzzle) => {
     let maxY = 0;
 
     // Collect all white cells from across clues
-    Object.entries(puzzle.clues_across).forEach(([num, clue]) => {
+    Object.entries(puzzle.clues_across).forEach(([_num, clue]) => {
       for (let i = 0; i < clue.length; i++) {
         const x = clue.x + i;
         const y = clue.y;
@@ -67,32 +68,19 @@ export const useGame = (puzzle: Puzzle) => {
         if (!newCells[key]) {
           newCells[key] = { letter: '', isBlack: false, isRevealed: false };
         }
-        if (i === 0) {
-          const parsed = parseInt(num, 10);
-          if (!isNaN(parsed)) {
-            newCells[key].clueNumber = parsed;
-          }
-        }
         maxX = Math.max(maxX, x);
         maxY = Math.max(maxY, y);
       }
     });
 
     // Collect all white cells from down clues
-    Object.entries(puzzle.clues_down).forEach(([num, clue]) => {
+    Object.entries(puzzle.clues_down).forEach(([_num, clue]) => {
       for (let i = 0; i < clue.length; i++) {
         const x = clue.x;
         const y = clue.y + i;
         const key = cellKey(x, y);
         if (!newCells[key]) {
           newCells[key] = { letter: '', isBlack: false, isRevealed: false };
-        }
-        // Only assign clue number if not already set by an across clue
-        if (i === 0 && !newCells[key].clueNumber) {
-          const parsed = parseInt(num, 10);
-          if (!isNaN(parsed)) {
-            newCells[key].clueNumber = parsed;
-          }
         }
         maxX = Math.max(maxX, x);
         maxY = Math.max(maxY, y);
@@ -108,6 +96,41 @@ export const useGame = (puzzle: Puzzle) => {
         }
       }
     }
+
+    // ── Standard crossword numbering (ported from hiphop-crossword.jsx) ────
+    // Assign clue numbers using position-based algorithm: iterate left-to-right,
+    // top-to-bottom. A cell gets the next sequential number if it starts an
+    // across word (no white cell to its left AND white cell to its right) OR
+    // a down word (no white cell above AND white cell below).
+    // This is API-key-independent and matches standard crossword numbering rules.
+    let clueCounter = 1;
+    for (let y = 0; y <= maxY; y++) {
+      for (let x = 0; x <= maxX; x++) {
+        const key = cellKey(x, y);
+        const cell = newCells[key];
+        if (!cell || cell.isBlack) continue;
+
+        const leftCell  = newCells[cellKey(x - 1, y)];
+        const rightCell = newCells[cellKey(x + 1, y)];
+        const upCell    = newCells[cellKey(x, y - 1)];
+        const downCell  = newCells[cellKey(x, y + 1)];
+
+        // Starts an across word: nothing (or black) to the left AND white to the right
+        const startsAcross =
+          (x === 0 || !leftCell || leftCell.isBlack) &&
+          rightCell && !rightCell.isBlack;
+
+        // Starts a down word: nothing (or black) above AND white below
+        const startsDown =
+          (y === 0 || !upCell || upCell.isBlack) &&
+          downCell && !downCell.isBlack;
+
+        if (startsAcross || startsDown) {
+          newCells[key].clueNumber = clueCounter++;
+        }
+      }
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
     setCells(newCells);
     setDimensions({ width: maxX + 1, height: maxY + 1 });
@@ -180,8 +203,12 @@ export const useGame = (puzzle: Puzzle) => {
     const [x, y] = selectedCell.split(',').map(Number);
     const entry = getClueForCell(x, y, direction);
     if (!entry) return null;
-    return { number: entry[0], text: (entry[1] as any).clue, direction };
-  }, [selectedCell, direction, getClueForCell]);
+    const [apiKey, clue] = entry;
+    // Look up the visual cell number from the start cell of this clue word
+    const startKey = cellKey((clue as any).x, (clue as any).y);
+    const visualNumber = cells[startKey]?.clueNumber;
+    return { number: apiKey, visualNumber, text: (clue as any).clue, direction };
+  }, [selectedCell, direction, getClueForCell, cells]);
 
   // ── Interaction handlers ─────────────────────────────────────────────────
 

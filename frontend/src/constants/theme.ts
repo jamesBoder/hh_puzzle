@@ -28,6 +28,11 @@ export const theme = {
     primaryMuted: '#8a7a40',     // muted gold — secondary labels
     primaryFaint: '#6a5a20',     // faint gold — catalog numbers, timestamps
 
+    // ── Amber palette (Crate Digger / vinyl warmth — game screen accents) ──
+    primaryAmber: '#c8832a',     // warm amber — selected cell, hint panel accent
+    primaryAmberDark: '#7a5020', // dark amber — needle arm, groove line
+    primaryAmberMuted: '#4a3018',// muted amber — highlighted word border
+
     // ── Borders & dividers ──
     border: '#3a3020',           // warm dark border (vintage feel)
     borderLight: '#2a2a2a',      // neutral border (profile sections)

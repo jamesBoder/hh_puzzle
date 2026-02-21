@@ -208,7 +208,7 @@ const GameBoard = ({ puzzle, navigation }: any) => {
         {activeClue ? (
           <>
             <Text style={styles.hintPanelLabel}>
-              {activeClue.number}{activeClue.direction === 'across' ? 'A' : 'D'}. {activeClue.direction.toUpperCase()}
+              {activeClue.visualNumber ?? activeClue.number}{activeClue.direction === 'across' ? 'A' : 'D'}. {activeClue.direction.toUpperCase()}
             </Text>
             <Text style={styles.hintPanelText} numberOfLines={2}>
               {activeClue.text}
@@ -350,12 +350,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
     borderBottomWidth: borders.thin,
     borderBottomColor: colors.border,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primaryAmber,  // amber left-edge accent (Crate Digger)
     minHeight: 44,
   },
   hintPanelLabel: {
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.black,
-    color: colors.primary,
+    color: colors.primaryAmber,            // warm amber label (Crate Digger)
     letterSpacing: typography.letterSpacing.normal,
     marginRight: spacing.md,
     minWidth: 52,
