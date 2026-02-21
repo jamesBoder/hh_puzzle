@@ -26,15 +26,41 @@ export const CrosswordCell: React.FC<CrosswordCellProps> = ({
   cellSize,
   onPress,
 }) => {
-  // ── Black (blocked) cell ─────────────────────────────────────────────────
+  // ── Black (blocked) cell — diagonal hatching (Phase 4) ───────────────────
   if (isBlack) {
+    // Render alternating diagonal strips inside the cell to approximate the
+    // CSS repeating-linear-gradient(45deg, ...) pattern from hiphop-crossword.jsx
+    const stripeCount = Math.ceil((cellSize * 2) / 8) + 2;
     return (
       <View
         style={[
           styles.blackCell,
-          { width: cellSize, height: cellSize },
+          { width: cellSize, height: cellSize, overflow: 'hidden' },
         ]}
-      />
+      >
+        <View
+          style={{
+            position: 'absolute',
+            width: cellSize * 2.5,
+            height: cellSize * 2.5,
+            top: -cellSize * 0.75,
+            left: -cellSize * 0.75,
+            transform: [{ rotate: '45deg' }],
+            flexDirection: 'row',
+          }}
+        >
+          {Array.from({ length: stripeCount }).map((_, i) => (
+            <View
+              key={i}
+              style={{
+                width: 4,
+                height: cellSize * 2.5,
+                backgroundColor: i % 2 === 0 ? '#0e0b06' : '#181208',
+              }}
+            />
+          ))}
+        </View>
+      </View>
     );
   }
 
@@ -96,9 +122,16 @@ const styles = StyleSheet.create({
   cell: {
     borderWidth: 1,
     borderColor: colors.cellBorder,
+    borderRadius: 3,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    // Elevation / shadow — cells lift off the grid background
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.45,
+    shadowRadius: 3,
   },
   blackCell: {
     backgroundColor: colors.cellBlack,
