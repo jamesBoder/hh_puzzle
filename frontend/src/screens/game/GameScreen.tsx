@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useCallback, useMemo, useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,9 @@ import {
   Alert,
   Animated,
   Easing,
+  Vibration,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { usePuzzle } from '../../hooks/usePuzzles';
@@ -77,14 +79,26 @@ const GameBoard = ({ puzzle, navigation }: any) => {
     direction,
     hintsUsed,
     elapsedSeconds,
+    isComplete,
+    lastCorrectCell,
+    lastWrongCell,
     handleCellPress,
     inputLetter,
     deleteLetter,
     revealHint,
+    revealWord,
+    revealPuzzle,
     submitPuzzle,
     getSelectedWordCells,
     getActiveClue,
   } = useGame(puzzle);
+
+  // ── Flash cell state (V2-7/8) ────────────────────────────────────────────
+  const [correctFlashCell, setCorrectFlashCell] = useState<string | null>(null);
+  const [wrongFlashCell, setWrongFlashCell] = useState<string | null>(null);
+
+  // ── Vinyl fast-spin state (V2-2) ─────────────────────────────────────────
+  const [vinylFast, setVinylFast] = useState(false);
 
 
   const selectedWordCells = useMemo(
@@ -107,14 +121,16 @@ const GameBoard = ({ puzzle, navigation }: any) => {
     return { totalCells: all.length, filledCells: filled.length, progressPct: pct };
   }, [cells]);
 
-  // ── Vinyl rotation (Phase 5) ─────────────────────────────────────────────
+  // ── Vinyl rotation (V2-2: fast-spin on correct letter) ───────────────────
   const vinylRotation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // Reset and restart with new duration when vinylFast changes
+    vinylRotation.setValue(0);
     const spin = Animated.loop(
       Animated.timing(vinylRotation, {
         toValue: 1,
-        duration: 4000,          // one full rotation every 4 seconds
+        duration: vinylFast ? 450 : 4000,
         easing: Easing.linear,
         useNativeDriver: true,
       })
@@ -122,7 +138,31 @@ const GameBoard = ({ puzzle, navigation }: any) => {
     spin.start();
     return () => spin.stop();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [vinylFast]);
+
+  // ── B1: Auto-complete — show celebration when puzzle is solved ────────────
+  useEffect(() => {
+    if (!isComplete) return;
+    Alert.alert(
+      '◆ PUZZLE COMPLETE ◆',
+      'You solved it! Submit your score?',
+      [
+        { text: 'Keep Reviewing', style: 'cancel' },
+        {
+          text: 'Submit ▶',
+          onPress: async () => {
+            const result = await submitPuzzle();
+            navigation.replace('GameComplete', {
+              result,
+              puzzleTitle: puzzle.title,
+              basePoints: puzzle.base_points,
+            });
+          },
+        },
+      ]
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isComplete]);
 
   const vinylSpin = vinylRotation.interpolate({
     inputRange: [0, 1],
@@ -141,10 +181,13 @@ const GameBoard = ({ puzzle, navigation }: any) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progressPct]);
 
-  // ── Key press handler ────────────────────────────────────────────────────
+  // ── Key press handler (B7: haptics + V2-2/7/8: flash triggers) ──────────
 
   const handleKey = useCallback(
     (key: string) => {
+      // B7: Tactile feedback on every key press
+      Vibration.vibrate(10);
+
       if (key === '⌫') {
         deleteLetter();
       } else if (key === '↔') {
@@ -152,9 +195,26 @@ const GameBoard = ({ puzzle, navigation }: any) => {
         if (selectedCell) handleCellPress(selectedCell);
       } else {
         inputLetter(key);
+
+        // V2-2/7/8: Read correctness refs synchronously after inputLetter
+        // (refs are set synchronously inside inputLetter before setCells)
+        if (lastCorrectCell.current) {
+          const cell = lastCorrectCell.current;
+          setCorrectFlashCell(cell);
+          // Trigger vinyl fast-spin for 800ms
+          setVinylFast(true);
+          setTimeout(() => {
+            setVinylFast(false);
+            setCorrectFlashCell(null);
+          }, 800);
+        } else if (lastWrongCell.current) {
+          const cell = lastWrongCell.current;
+          setWrongFlashCell(cell);
+          setTimeout(() => setWrongFlashCell(null), 400);
+        }
       }
     },
-    [deleteLetter, inputLetter, selectedCell, handleCellPress]
+    [deleteLetter, inputLetter, selectedCell, handleCellPress, lastCorrectCell, lastWrongCell]
   );
 
   // ── Submit ───────────────────────────────────────────────────────────────
@@ -180,27 +240,49 @@ const GameBoard = ({ puzzle, navigation }: any) => {
     );
   }, [submitPuzzle, navigation, puzzle]);
 
-  // ── Hint ─────────────────────────────────────────────────────────────────
+  // ── Hint / Reveal (B4: Reveal Letter / Word / Puzzle) ────────────────────
 
   const handleHint = useCallback(() => {
     Alert.alert(
-      'USE HINT',
-      'Reveal the next empty letter in this word? Hints reduce your score.',
+      '◈ REVEAL',
+      'Choose what to reveal. Each revealed letter reduces your score.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Reveal',
+          text: 'Reveal Letter',
           onPress: () => {
             revealHint();
-            // Scroll grid to show the selected word after reveal
             if (selectedCell) {
               setTimeout(() => gridRef.current?.scrollToCell(selectedCell), 100);
             }
           },
         },
+        {
+          text: 'Reveal Word',
+          onPress: () => {
+            revealWord();
+            if (selectedCell) {
+              setTimeout(() => gridRef.current?.scrollToCell(selectedCell), 100);
+            }
+          },
+        },
+        {
+          text: 'Reveal Puzzle',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'REVEAL ENTIRE PUZZLE?',
+              'This will reveal all answers and heavily penalise your score.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Reveal All', style: 'destructive', onPress: revealPuzzle },
+              ]
+            );
+          },
+        },
       ]
     );
-  }, [revealHint, selectedCell]);
+  }, [revealHint, revealWord, revealPuzzle, selectedCell]);
 
   // ── Menu ──────────────────────────────────────────────────────────────────
 
@@ -225,11 +307,16 @@ const GameBoard = ({ puzzle, navigation }: any) => {
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <View style={styles.header}>
-        {/* Spinning vinyl disc (Phase 5) */}
+        {/* V2-1: Spinning vinyl disc — 5 groove rings + "HH" center label */}
         <Animated.View style={[styles.vinyl, { transform: [{ rotate: vinylSpin }] }]}>
           <View style={styles.vinylGroove1} />
           <View style={styles.vinylGroove2} />
-          <View style={styles.vinylCenter} />
+          <View style={styles.vinylGroove3} />
+          <View style={styles.vinylGroove4} />
+          <View style={styles.vinylGroove5} />
+          <View style={styles.vinylCenter}>
+            <Text style={styles.vinylCenterText}>HH</Text>
+          </View>
         </Animated.View>
 
         <View style={styles.headerLeft}>
@@ -258,6 +345,8 @@ const GameBoard = ({ puzzle, navigation }: any) => {
           selectedCell={selectedCell}
           selectedWordCells={selectedWordCells}
           onCellPress={handleCellPress}
+          correctFlashCell={correctFlashCell}
+          wrongFlashCell={wrongFlashCell}
         />
       </View>
 
@@ -318,26 +407,58 @@ const GameBoard = ({ puzzle, navigation }: any) => {
         ))}
       </View>
 
-      {/* ── Track Info panel (replaces old action row) ──────────────────── */}
+      {/* ── Track Info panel (C3: dynamic metadata, V2-9: gradient bar, V2-14: waveform) */}
       <View style={[styles.trackInfoPanel, { paddingBottom: spacing.base + insets.bottom }]}>
         <Text style={styles.trackInfoLabel}>◆ TRACK INFO</Text>
         <View style={styles.trackInfoRow}>
-          <Text style={styles.trackInfoFlavor}>BPM: 93</Text>
-          <Text style={styles.trackInfoFlavor}>KEY: Dm</Text>
+          {/* C3: Dynamic region/decade from puzzle metadata */}
+          <Text style={styles.trackInfoFlavor}>
+            {`REGION: ${puzzle.region ? puzzle.region.toUpperCase() : '—'}`}
+          </Text>
+          <Text style={styles.trackInfoFlavor}>
+            {`ERA: ${puzzle.decade || '—'}`}
+          </Text>
           <Text style={styles.trackInfoCounter}>{filledCells}/{totalCells}</Text>
         </View>
+
+        {/* V2-9: Gradient progress bar with glow */}
         <View style={styles.trackInfoBarTrack}>
           <Animated.View
-            style={[
-              styles.trackInfoBarFill,
-              {
-                width: progressAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['0%', '100%'],
-                }),
-              },
-            ]}
-          />
+            style={{
+              width: progressAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0%', '100%'],
+              }),
+              height: '100%',
+              borderRadius: 2,
+              overflow: 'hidden',
+            }}
+          >
+            <LinearGradient
+              colors={['#7a5010', '#c8832a', '#e8a848', '#c8832a']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ flex: 1 }}
+            />
+          </Animated.View>
+        </View>
+
+        {/* V2-14: Decorative waveform bars */}
+        <View style={styles.waveformRow}>
+          {[3,6,9,13,8,11,15,10,7,12,9,6,4,8,11,13,9,6,3].map((h, i) => (
+            <View
+              key={i}
+              style={[
+                styles.waveformBar,
+                {
+                  height: h,
+                  backgroundColor: i / 19 <= progressPct
+                    ? colors.primaryAmber
+                    : '#2a1f0e',
+                },
+              ]}
+            />
+          ))}
         </View>
       </View>
 
@@ -616,16 +737,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     overflow: 'hidden',
   },
-  trackInfoBarFill: {
-    height: '100%' as any,
-    backgroundColor: colors.primaryAmber,
-    borderRadius: 2,
-  },
-  // ── Vinyl disc (Phase 5) ───────────────────────────────────────────────────
+  // ── Vinyl disc (V2-1: 5 groove rings + HH center label) ───────────────────
   vinyl: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#0e0b06',
     borderWidth: 2,
     borderColor: colors.primaryAmber,
@@ -633,27 +749,113 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: spacing.md,
     flexShrink: 0,
+    // Multi-layer shadow for depth
+    shadowColor: colors.primaryAmber,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 6,
   },
   vinylGroove1: {
+    position: 'absolute',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.04)',
+  },
+  vinylGroove2: {
     position: 'absolute',
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 1,
-    borderColor: '#2a1f0e',
+    borderColor: 'rgba(255,255,255,0.04)',
   },
-  vinylGroove2: {
+  vinylGroove3: {
     position: 'absolute',
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 17,
+    height: 17,
+    borderRadius: 8.5,
     borderWidth: 1,
-    borderColor: '#2a1f0e',
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  vinylGroove4: {
+    position: 'absolute',
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  vinylGroove5: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
   },
   vinylCenter: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: colors.primaryAmber,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  vinylCenterText: {
+    fontSize: 4,
+    fontWeight: '900' as const,
+    color: '#0e0b06',
+    letterSpacing: 0,
+  },
+  // ── Grid corner ornaments (V2-10) ──────────────────────────────────────────
+  cornerOrnament: {
+    position: 'absolute',
+    width: 12,
+    height: 12,
+    zIndex: 5,
+  },
+  cornerTL: {
+    top: 6,
+    left: 6,
+    borderTopWidth: 1.5,
+    borderLeftWidth: 1.5,
+    borderColor: '#c8832a55',
+  },
+  cornerTR: {
+    top: 6,
+    right: 6,
+    borderTopWidth: 1.5,
+    borderRightWidth: 1.5,
+    borderColor: '#c8832a55',
+  },
+  cornerBL: {
+    bottom: 6,
+    left: 6,
+    borderBottomWidth: 1.5,
+    borderLeftWidth: 1.5,
+    borderColor: '#c8832a55',
+  },
+  cornerBR: {
+    bottom: 6,
+    right: 6,
+    borderBottomWidth: 1.5,
+    borderRightWidth: 1.5,
+    borderColor: '#c8832a55',
+  },
+  // ── Waveform bars (V2-14) ──────────────────────────────────────────────────
+  waveformRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    gap: 2,
+    marginTop: spacing.sm,
+    height: 16,
+  },
+  waveformBar: {
+    width: 3,
+    borderRadius: 1,
   },
 });
