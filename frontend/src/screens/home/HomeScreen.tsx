@@ -88,30 +88,34 @@ export const HomeScreen = ({ navigation }: any) => {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Vintage Header */}
       <View style={styles.header}>
-        {/* Top groove line — fades left and right */}
-        <View style={styles.grooveLine}>
-          <View style={[styles.grooveSegment, { opacity: 0 }]} />
-          <View style={[styles.grooveSegment, { opacity: 0.25 }]} />
-          <View style={[styles.grooveSegment, { opacity: 0.7, flex: 2 }]} />
-          <View style={[styles.grooveSegment, { opacity: 1, flex: 3 }]} />
-          <View style={[styles.grooveSegment, { opacity: 1, flex: 3 }]} />
-          <View style={[styles.grooveSegment, { opacity: 0.7, flex: 2 }]} />
-          <View style={[styles.grooveSegment, { opacity: 0.25 }]} />
-          <View style={[styles.grooveSegment, { opacity: 0 }]} />
+        {/* V2-11: Decorative diamond divider (top) */}
+        <View style={styles.diamondDivider}>
+          <View style={styles.diamondLine} />
+          <View style={styles.diamondSideSmall} />
+          <View style={styles.diamondCenter} />
+          <View style={styles.diamondSideSmall} />
+          <View style={styles.diamondLine} />
         </View>
+
+        {/* V2-13: Ambient warm glow behind header content */}
+        <View style={styles.ambientGlow} />
 
         {/* Header row: [vinyl] [title block] */}
         <View style={styles.headerContent}>
-          {/* Spinning vinyl disc */}
+          {/* V2-1: Spinning vinyl disc — 5 groove rings + "HH" center label */}
           <Animated.View style={[styles.vinyl, { transform: [{ rotate: vinylSpin }] }]}>
             <View style={styles.vinylGroove1} />
             <View style={styles.vinylGroove2} />
-            <View style={styles.vinylCenter} />
+            <View style={styles.vinylGroove3} />
+            <View style={styles.vinylGroove4} />
+            <View style={styles.vinylGroove5} />
+            <View style={styles.vinylCenter}>
+              <Text style={styles.vinylCenterText}>HH</Text>
+            </View>
           </Animated.View>
 
           {/* Title block */}
           <View style={styles.headerTitleBlock}>
-            <Text style={styles.headerLabel}>◆ EST. 1978 ◆</Text>
             <Pressable onPressIn={handleTitlePressIn} onPressOut={handleTitlePressOut}>
               <Animated.Text
                 style={[
@@ -132,16 +136,13 @@ export const HomeScreen = ({ navigation }: any) => {
           </View>
         </View>
 
-        {/* Bottom groove line — fades left and right */}
-        <View style={styles.grooveLine}>
-          <View style={[styles.grooveSegment, { opacity: 0 }]} />
-          <View style={[styles.grooveSegment, { opacity: 0.25 }]} />
-          <View style={[styles.grooveSegment, { opacity: 0.7, flex: 2 }]} />
-          <View style={[styles.grooveSegment, { opacity: 1, flex: 3 }]} />
-          <View style={[styles.grooveSegment, { opacity: 1, flex: 3 }]} />
-          <View style={[styles.grooveSegment, { opacity: 0.7, flex: 2 }]} />
-          <View style={[styles.grooveSegment, { opacity: 0.25 }]} />
-          <View style={[styles.grooveSegment, { opacity: 0 }]} />
+        {/* V2-11: Decorative diamond divider (bottom) */}
+        <View style={styles.diamondDivider}>
+          <View style={styles.diamondLine} />
+          <View style={styles.diamondSideSmall} />
+          <View style={styles.diamondCenter} />
+          <View style={styles.diamondSideSmall} />
+          <View style={styles.diamondLine} />
         </View>
       </View>
 
@@ -253,35 +254,60 @@ const styles = StyleSheet.create({
   },
   // ── Vintage Header ──────────────────────────────────────
   header: {
-    paddingTop: spacing.lg,
+    paddingTop: spacing.xs,
     paddingHorizontal: spacing.xxxl,
-    paddingBottom: spacing.lg,
+    paddingBottom: spacing.sm,
   },
-  // Fading groove line — simulates gradient border without a library
-  grooveLine: {
+  // ── V2-13: Ambient warm glow behind header ────────────────────────────────
+  ambientGlow: {
+    position: 'absolute',
+    top: -40,
+    left: '10%',
+    right: '10%',
+    height: 120,
+    backgroundColor: 'rgba(200,131,42,0.06)',
+    borderRadius: 999,
+  },
+  // ── V2-11: Diamond divider ────────────────────────────────────────────────
+  diamondDivider: {
     flexDirection: 'row',
-    height: 2,
-    marginVertical: spacing.sm,
+    alignItems: 'center',
+    marginVertical: spacing.xxs,
+    height: 10,
   },
-  grooveSegment: {
+  diamondLine: {
     flex: 1,
-    height: 2,
+    height: 1,
+    backgroundColor: colors.primaryAmberDark,
+    opacity: 0.6,
+  },
+  diamondCenter: {
+    width: 8,
+    height: 8,
     backgroundColor: colors.primaryAmber,
+    transform: [{ rotate: '45deg' }],
+    marginHorizontal: spacing.xs,
+    shadowColor: colors.primaryAmber,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  diamondSideSmall: {
+    width: 5,
+    height: 5,
+    backgroundColor: colors.primaryAmberDark,
+    transform: [{ rotate: '45deg' }],
+    marginHorizontal: spacing.xxs,
+    opacity: 0.7,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xxs,
   },
   headerTitleBlock: {
     flex: 1,
-  },
-  headerLabel: {
-    fontSize: typography.sizes.sm,
-    color: colors.primaryAmberMuted,
-    letterSpacing: typography.letterSpacing.wider,
-    fontWeight: typography.weights.semibold,
-    marginBottom: spacing.xxs,
   },
   headerTitle: {
     fontSize: typography.sizes.h1,
@@ -295,11 +321,11 @@ const styles = StyleSheet.create({
     letterSpacing: typography.letterSpacing.wide,
     marginTop: spacing.xxs,
   },
-  // ── Vinyl disc ──────────────────────────────────────────
+  // ── V2-1: Vinyl disc — 5 groove rings + HH center label ──────────────────
   vinyl: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#0e0b06',
     borderWidth: 2,
     borderColor: colors.primaryAmber,
@@ -307,28 +333,65 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: spacing.lg,
     flexShrink: 0,
+    shadowColor: colors.primaryAmber,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
   },
   vinylGroove1: {
     position: 'absolute',
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     borderWidth: 1,
-    borderColor: '#2a1f0e',
+    borderColor: 'rgba(255,255,255,0.04)',
   },
   vinylGroove2: {
     position: 'absolute',
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     borderWidth: 1,
-    borderColor: '#2a1f0e',
+    borderColor: 'rgba(255,255,255,0.04)',
+  },
+  vinylGroove3: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  vinylGroove4: {
+    position: 'absolute',
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  vinylGroove5: {
+    position: 'absolute',
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
   },
   vinylCenter: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     backgroundColor: colors.primaryAmber,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  vinylCenterText: {
+    fontSize: 4,
+    fontWeight: '900' as const,
+    color: '#0e0b06',
+    letterSpacing: 0,
   },
   // ── Stats Bar ───────────────────────────────────────────
   statsContainer: {
