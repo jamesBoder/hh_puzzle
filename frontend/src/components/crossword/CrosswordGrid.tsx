@@ -10,6 +10,10 @@ interface CrosswordGridProps {
   selectedCell: string | null;
   selectedWordCells: string[];
   onCellPress: (key: string) => void;
+  /** Cell key that just received a correct letter — triggers flash animation */
+  correctFlashCell?: string | null;
+  /** Cell key that just received a wrong letter — triggers shake animation */
+  wrongFlashCell?: string | null;
 }
 
 /** Imperative handle exposed via ref — allows parent to scroll to a cell */
@@ -24,8 +28,8 @@ const DEFAULT_CELL_SIZE = 30; // initial "close-up" view — user can zoom out t
 const ZOOM_STEP = 4;          // px change per button press
 const GRID_PADDING = 12;
 
-export const CrosswordGrid = React.forwardRef<CrosswordGridHandle, CrosswordGridProps>(
-  ({ cells, dimensions, selectedCell, selectedWordCells, onCellPress }, ref) => {
+const CrosswordGridInner = React.forwardRef<CrosswordGridHandle, CrosswordGridProps>(
+  ({ cells, dimensions, selectedCell, selectedWordCells, onCellPress, correctFlashCell, wrongFlashCell }, ref) => {
   // ── Zoom state (declared first — used in imperative handle below) ──────
   const [cellSize, setCellSize] = useState(DEFAULT_CELL_SIZE);
 
@@ -108,6 +112,8 @@ export const CrosswordGrid = React.forwardRef<CrosswordGridHandle, CrosswordGrid
                       clueNumber={cell.clueNumber}
                       cellSize={cellSize}
                       onPress={() => onCellPress(key)}
+                      isCorrectFlash={key === correctFlashCell}
+                      isWrongFlash={key === wrongFlashCell}
                     />
                   );
                 })}
@@ -143,6 +149,18 @@ export const CrosswordGrid = React.forwardRef<CrosswordGridHandle, CrosswordGrid
     </View>
   );
 });
+
+// ── G1: Memoize CrosswordGrid — only re-render when relevant props change ──
+export const CrosswordGrid = React.memo(CrosswordGridInner, (prev, next) => {
+  return (
+    prev.cells === next.cells &&
+    prev.dimensions === next.dimensions &&
+    prev.selectedCell === next.selectedCell &&
+    prev.selectedWordCells === next.selectedWordCells &&
+    prev.correctFlashCell === next.correctFlashCell &&
+    prev.wrongFlashCell === next.wrongFlashCell
+  );
+}) as typeof CrosswordGridInner;
 
 const styles = StyleSheet.create({
   container: {
