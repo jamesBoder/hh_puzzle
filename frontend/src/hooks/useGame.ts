@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import { puzzlesAPI } from '../api/puzzles';
 import { Puzzle } from '../api/types';
@@ -38,18 +39,53 @@ export const useGame = (puzzle: Puzzle) => {
   const [hintsUsed, setHintsUsed] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [attemptId, setAttemptId] = useState<number | null>(null);
+  const [isComplete, setIsComplete] = useState(false);
+
+  // Flash signal refs — set to a cell key when a correct/wrong letter is typed
+  const lastCorrectCell = useRef<string | null>(null);
+  const lastWrongCell = useRef<string | null>(null);
+
   const startTimeRef = useRef(Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isPausedRef = useRef(false);
+  const pausedAtRef = useRef<number | null>(null);
 
   // ── Timer ────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
-      setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
+      if (!isPausedRef.current) {
+        setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
+      }
     }, 1000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
+  }, []);
+
+  // ── B8: AppState — auto-pause timer when app goes to background ──────────
+
+  useEffect(() => {
+    const handleAppStateChange = (nextState: AppStateStatus) => {
+      if (nextState === 'background' || nextState === 'inactive') {
+        // Pause
+        if (!isPausedRef.current) {
+          isPausedRef.current = true;
+          pausedAtRef.current = Date.now();
+        }
+      } else if (nextState === 'active') {
+        // Resume — shift startTimeRef forward by the paused duration
+        if (isPausedRef.current && pausedAtRef.current !== null) {
+          const pausedDuration = Date.now() - pausedAtRef.current;
+          startTimeRef.current += pausedDuration;
+          isPausedRef.current = false;
+          pausedAtRef.current = null;
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
   }, []);
 
   // ── Grid initialisation ──────────────────────────────────────────────────
@@ -245,13 +281,28 @@ export const useGame = (puzzle: Puzzle) => {
       if (!selectedCell) return;
       const [x, y] = selectedCell.split(',').map(Number);
 
+      // ── V2-7/8: Check correctness before updating state ──────────────────
+      const entry = getClueForCell(x, y, direction);
+      if (entry) {
+        const [_numCheck, clue] = entry;
+        const posInWord = direction === 'across' ? x - clue.x : y - clue.y;
+        const expectedLetter = clue.answer[posInWord]?.toUpperCase();
+        const typedLetter = letter.toUpperCase();
+        if (expectedLetter && typedLetter === expectedLetter) {
+          lastCorrectCell.current = selectedCell;
+          lastWrongCell.current = null;
+        } else {
+          lastWrongCell.current = selectedCell;
+          lastCorrectCell.current = null;
+        }
+      }
+
       setCells(prev => ({
         ...prev,
         [selectedCell]: { ...prev[selectedCell], letter: letter.toUpperCase() },
       }));
 
       // Advance to next empty cell in the word (or next cell if all filled)
-      const entry = getClueForCell(x, y, direction);
       if (!entry) return;
       const [_num2, clue] = entry;
 
@@ -337,6 +388,56 @@ export const useGame = (puzzle: Puzzle) => {
     }
   }, [selectedCell, direction, cells, getClueForCell]);
 
+  /** B4: Reveal all letters in the currently selected word. */
+  const revealWord = useCallback(() => {
+    if (!selectedCell) return;
+    const [x, y] = selectedCell.split(',').map(Number);
+    const entry = getClueForCell(x, y, direction);
+    if (!entry) return;
+    const [_num5, clue] = entry;
+
+    const updates: Record<string, CellData> = {};
+    let hintsAdded = 0;
+    for (let i = 0; i < clue.length; i++) {
+      const cx = direction === 'across' ? clue.x + i : clue.x;
+      const cy = direction === 'across' ? clue.y : clue.y + i;
+      const key = cellKey(cx, cy);
+      if (!cells[key]?.isRevealed) {
+        updates[key] = { ...cells[key], letter: clue.answer[i], isRevealed: true };
+        hintsAdded++;
+      }
+    }
+    if (hintsAdded > 0) {
+      setCells(prev => ({ ...prev, ...updates }));
+      setHintsUsed(prev => prev + hintsAdded);
+    }
+  }, [selectedCell, direction, cells, getClueForCell]);
+
+  /** B4: Reveal all letters in the entire puzzle. */
+  const revealPuzzle = useCallback(() => {
+    const allEntries = [
+      ...Object.entries(puzzle.clues_across).map(([_k, c]) => ({ clue: c, dir: 'across' as const })),
+      ...Object.entries(puzzle.clues_down).map(([_k, c]) => ({ clue: c, dir: 'down' as const })),
+    ];
+    const updates: Record<string, CellData> = {};
+    let hintsAdded = 0;
+    allEntries.forEach(({ clue, dir }) => {
+      for (let i = 0; i < clue.length; i++) {
+        const cx = dir === 'across' ? clue.x + i : clue.x;
+        const cy = dir === 'across' ? clue.y : clue.y + i;
+        const key = cellKey(cx, cy);
+        if (!cells[key]?.isRevealed) {
+          updates[key] = { ...cells[key], letter: clue.answer[i], isRevealed: true };
+          hintsAdded++;
+        }
+      }
+    });
+    if (hintsAdded > 0) {
+      setCells(prev => ({ ...prev, ...updates }));
+      setHintsUsed(prev => prev + hintsAdded);
+    }
+  }, [cells, puzzle]);
+
   /** Jump to a clue from the clue list. */
   const selectClue = useCallback(
     (clueNum: string, dir: 'across' | 'down') => {
@@ -369,6 +470,20 @@ export const useGame = (puzzle: Puzzle) => {
     });
   }, [cells, puzzle]);
 
+  // ── B1: Auto-complete detection ──────────────────────────────────────────
+
+  useEffect(() => {
+    // Only check after cells are initialised and puzzle is not yet complete
+    if (Object.keys(cells).length === 0 || isComplete) return;
+    const allWhite = Object.values(cells).filter(c => !c.isBlack);
+    // Only run check if all cells are filled (avoid expensive check on every keystroke)
+    const allFilled = allWhite.every(c => c.letter !== '');
+    if (allFilled && checkComplete()) {
+      setIsComplete(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cells]);
+
   const submitPuzzle = useCallback(async () => {
     if (timerRef.current) clearInterval(timerRef.current);
     const completed = checkComplete();
@@ -390,10 +505,15 @@ export const useGame = (puzzle: Puzzle) => {
     direction,
     hintsUsed,
     elapsedSeconds,
+    isComplete,
+    lastCorrectCell,
+    lastWrongCell,
     handleCellPress,
     inputLetter,
     deleteLetter,
     revealHint,
+    revealWord,
+    revealPuzzle,
     checkComplete,
     submitPuzzle,
     getSelectedWordCells,
