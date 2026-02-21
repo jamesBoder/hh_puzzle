@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Animated,
+  Easing,
   Pressable,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,6 +20,28 @@ import { colors, typography, spacing, borders } from '../../constants/theme';
 export const HomeScreen = ({ navigation }: any) => {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
+
+  // ── Vinyl rotation animation ─────────────────────────────────────────────
+  const vinylRotation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const spin = Animated.loop(
+      Animated.timing(vinylRotation, {
+        toValue: 1,
+        duration: 4000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    spin.start();
+    return () => spin.stop();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const vinylSpin = vinylRotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   // ── Title glow animation ─────────────────────────────────────────────────
   const glowAnim = useRef(new Animated.Value(0)).current;
@@ -65,28 +88,61 @@ export const HomeScreen = ({ navigation }: any) => {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Vintage Header */}
       <View style={styles.header}>
-        <View style={styles.headerDivider} />
-        <View style={styles.headerContent}>
-          <Text style={styles.headerLabel}>◆ EST. 19780 ◆</Text>
-          <Pressable onPressIn={handleTitlePressIn} onPressOut={handleTitlePressOut}>
-            <Animated.Text
-              style={[
-                styles.headerTitle,
-                {
-                  textShadowColor: colors.primary,
-                  textShadowOffset: { width: 0, height: 0 },
-                  textShadowRadius: glowShadowRadius,
-                },
-              ]}
-            >
-              HH PUZZLE
-            </Animated.Text>
-          </Pressable>
-          <Text style={styles.headerSubtitle}>
-            {user ? `WELCOME BACK, ${user.username.toUpperCase()}` : 'HIP-HOP CROSSWORD SERIES'}
-          </Text>
+        {/* Top groove line — fades left and right */}
+        <View style={styles.grooveLine}>
+          <View style={[styles.grooveSegment, { opacity: 0 }]} />
+          <View style={[styles.grooveSegment, { opacity: 0.25 }]} />
+          <View style={[styles.grooveSegment, { opacity: 0.7, flex: 2 }]} />
+          <View style={[styles.grooveSegment, { opacity: 1, flex: 3 }]} />
+          <View style={[styles.grooveSegment, { opacity: 1, flex: 3 }]} />
+          <View style={[styles.grooveSegment, { opacity: 0.7, flex: 2 }]} />
+          <View style={[styles.grooveSegment, { opacity: 0.25 }]} />
+          <View style={[styles.grooveSegment, { opacity: 0 }]} />
         </View>
-        <View style={styles.headerDivider} />
+
+        {/* Header row: [vinyl] [title block] */}
+        <View style={styles.headerContent}>
+          {/* Spinning vinyl disc */}
+          <Animated.View style={[styles.vinyl, { transform: [{ rotate: vinylSpin }] }]}>
+            <View style={styles.vinylGroove1} />
+            <View style={styles.vinylGroove2} />
+            <View style={styles.vinylCenter} />
+          </Animated.View>
+
+          {/* Title block */}
+          <View style={styles.headerTitleBlock}>
+            <Text style={styles.headerLabel}>◆ EST. 1978 ◆</Text>
+            <Pressable onPressIn={handleTitlePressIn} onPressOut={handleTitlePressOut}>
+              <Animated.Text
+                style={[
+                  styles.headerTitle,
+                  {
+                    textShadowColor: colors.primaryAmber,
+                    textShadowOffset: { width: 0, height: 0 },
+                    textShadowRadius: glowShadowRadius,
+                  },
+                ]}
+              >
+                HH PUZZLE
+              </Animated.Text>
+            </Pressable>
+            <Text style={styles.headerSubtitle}>
+              {user ? `WELCOME BACK, ${user.username.toUpperCase()}` : 'HIP-HOP CROSSWORD SERIES'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Bottom groove line — fades left and right */}
+        <View style={styles.grooveLine}>
+          <View style={[styles.grooveSegment, { opacity: 0 }]} />
+          <View style={[styles.grooveSegment, { opacity: 0.25 }]} />
+          <View style={[styles.grooveSegment, { opacity: 0.7, flex: 2 }]} />
+          <View style={[styles.grooveSegment, { opacity: 1, flex: 3 }]} />
+          <View style={[styles.grooveSegment, { opacity: 1, flex: 3 }]} />
+          <View style={[styles.grooveSegment, { opacity: 0.7, flex: 2 }]} />
+          <View style={[styles.grooveSegment, { opacity: 0.25 }]} />
+          <View style={[styles.grooveSegment, { opacity: 0 }]} />
+        </View>
       </View>
 
       {/* User Stats — vintage record label style */}
@@ -200,21 +256,29 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
     paddingHorizontal: spacing.xxxl,
     paddingBottom: spacing.lg,
-    alignItems: 'center',
   },
-  headerDivider: {
-    width: '100%',
-    height: borders.medium,
-    backgroundColor: colors.primary,
+  // Fading groove line — simulates gradient border without a library
+  grooveLine: {
+    flexDirection: 'row',
+    height: 2,
     marginVertical: spacing.sm,
   },
+  grooveSegment: {
+    flex: 1,
+    height: 2,
+    backgroundColor: colors.primaryAmber,
+  },
   headerContent: {
+    flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.sm,
   },
+  headerTitleBlock: {
+    flex: 1,
+  },
   headerLabel: {
     fontSize: typography.sizes.sm,
-    color: colors.primaryDark,
+    color: colors.primaryAmberMuted,
     letterSpacing: typography.letterSpacing.wider,
     fontWeight: typography.weights.semibold,
     marginBottom: spacing.xxs,
@@ -222,7 +286,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: typography.sizes.h1,
     fontWeight: typography.weights.black,
-    color: colors.primary,
+    color: colors.primaryAmber,
     letterSpacing: typography.letterSpacing.widest,
   },
   headerSubtitle: {
@@ -230,6 +294,41 @@ const styles = StyleSheet.create({
     color: colors.primaryMid,
     letterSpacing: typography.letterSpacing.wide,
     marginTop: spacing.xxs,
+  },
+  // ── Vinyl disc ──────────────────────────────────────────
+  vinyl: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#0e0b06',
+    borderWidth: 2,
+    borderColor: colors.primaryAmber,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.lg,
+    flexShrink: 0,
+  },
+  vinylGroove1: {
+    position: 'absolute',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#2a1f0e',
+  },
+  vinylGroove2: {
+    position: 'absolute',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: '#2a1f0e',
+  },
+  vinylCenter: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primaryAmber,
   },
   // ── Stats Bar ───────────────────────────────────────────
   statsContainer: {
