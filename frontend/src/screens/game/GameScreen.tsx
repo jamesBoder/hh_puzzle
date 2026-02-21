@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Animated,
+  Easing,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { usePuzzle } from '../../hooks/usePuzzles';
 import { useGame } from '../../hooks/useGame';
-import { CrosswordGrid } from '../../components/crossword/CrosswordGrid';
+import { CrosswordGrid, CrosswordGridHandle } from '../../components/crossword/CrosswordGrid';
 import { colors, typography, spacing, borders } from '../../constants/theme';
 
 // ── Keyboard layout ────────────────────────────────────────────────────────
@@ -30,8 +32,8 @@ const formatTime = (seconds: number): string => {
   return `${m}:${s}`;
 };
 
-// Combined height of hint panel (~44px) + keyboard (~130px) + action row (~48px)
-const BOTTOM_FIXED_HEIGHT = 222;
+// Combined height of action section (~48px) + hint panel (~44px) + keyboard (~168px) + Track Info panel (~52px)
+const BOTTOM_FIXED_HEIGHT = 312;
 
 // ── Component ──────────────────────────────────────────────────────────────
 
@@ -66,6 +68,8 @@ export const GameScreen = ({ route, navigation }: any) => {
 // ── Inner board (rendered only once puzzle data is available) ──────────────
 
 const GameBoard = ({ puzzle, navigation }: any) => {
+  const insets = useSafeAreaInsets();
+  const gridRef = useRef<CrosswordGridHandle>(null);
   const {
     cells,
     dimensions,
@@ -94,6 +98,48 @@ const GameBoard = ({ puzzle, navigation }: any) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [selectedCell, direction]
   );
+
+  // ── Progress (Phase 3) ───────────────────────────────────────────────────
+  const { totalCells, filledCells, progressPct } = useMemo(() => {
+    const all = Object.values(cells).filter(c => !c.isBlack);
+    const filled = all.filter(c => c.letter !== '');
+    const pct = all.length > 0 ? filled.length / all.length : 0;
+    return { totalCells: all.length, filledCells: filled.length, progressPct: pct };
+  }, [cells]);
+
+  // ── Vinyl rotation (Phase 5) ─────────────────────────────────────────────
+  const vinylRotation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const spin = Animated.loop(
+      Animated.timing(vinylRotation, {
+        toValue: 1,
+        duration: 4000,          // one full rotation every 4 seconds
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    spin.start();
+    return () => spin.stop();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const vinylSpin = vinylRotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  // ── Animated progress bar (Phase 6 / Track Info) ─────────────────────────
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: progressPct,
+      duration: 400,
+      useNativeDriver: false, // width % animation requires JS driver
+    }).start();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progressPct]);
 
   // ── Key press handler ────────────────────────────────────────────────────
 
@@ -142,10 +188,19 @@ const GameBoard = ({ puzzle, navigation }: any) => {
       'Reveal the next empty letter in this word? Hints reduce your score.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Reveal', onPress: revealHint },
+        {
+          text: 'Reveal',
+          onPress: () => {
+            revealHint();
+            // Scroll grid to show the selected word after reveal
+            if (selectedCell) {
+              setTimeout(() => gridRef.current?.scrollToCell(selectedCell), 100);
+            }
+          },
+        },
       ]
     );
-  }, [revealHint]);
+  }, [revealHint, selectedCell]);
 
   // ── Menu ──────────────────────────────────────────────────────────────────
 
@@ -166,10 +221,17 @@ const GameBoard = ({ puzzle, navigation }: any) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* ── Scrollable content ──────────────────────────────────────────── */}
-      <View style={styles.scrollContent}>
+      <View style={[styles.scrollContent, { paddingBottom: BOTTOM_FIXED_HEIGHT + insets.bottom }]}>
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <View style={styles.header}>
+        {/* Spinning vinyl disc (Phase 5) */}
+        <Animated.View style={[styles.vinyl, { transform: [{ rotate: vinylSpin }] }]}>
+          <View style={styles.vinylGroove1} />
+          <View style={styles.vinylGroove2} />
+          <View style={styles.vinylCenter} />
+        </Animated.View>
+
         <View style={styles.headerLeft}>
           <Text style={styles.puzzleTitle} numberOfLines={1}>
             {puzzle.title.replace(/ #[a-f0-9]{6}$/, '').toUpperCase()}
@@ -190,6 +252,7 @@ const GameBoard = ({ puzzle, navigation }: any) => {
       {/* ── Grid ────────────────────────────────────────────────────────── */}
       <View style={styles.gridWrapper}>
         <CrosswordGrid
+          ref={gridRef}
           cells={cells}
           dimensions={dimensions}
           selectedCell={selectedCell}
@@ -200,8 +263,21 @@ const GameBoard = ({ puzzle, navigation }: any) => {
 
       </View>{/* end scrollContent */}
 
-      {/* ── Fixed bottom: Hint panel + Keyboard + Action row ────────────── */}
+      {/* ── Fixed bottom ────────────────────────────────────────────────── */}
       <View style={styles.bottomFixed}>
+
+      {/* ── Action section (menu + reveal + submit) — TOP of fixed panel ── */}
+      <View style={styles.actionSection}>
+        <TouchableOpacity style={styles.menuButton} onPress={handleMenu} activeOpacity={0.8}>
+          <Text style={styles.menuButtonText}>☰</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.hintButton} onPress={handleHint} activeOpacity={0.8}>
+          <Text style={styles.hintButtonText}>◈ REVEAL</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} activeOpacity={0.8}>
+          <Text style={styles.submitButtonText}>SUBMIT ▶</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* ── Hint panel (selected entry only) ────────────────────────────── */}
       <View style={styles.hintPanel}>
@@ -242,17 +318,27 @@ const GameBoard = ({ puzzle, navigation }: any) => {
         ))}
       </View>
 
-      {/* ── Action row (menu + reveal + submit) ─────────────────────────── */}
-      <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.menuButton} onPress={handleMenu} activeOpacity={0.8}>
-          <Text style={styles.menuButtonText}>☰</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.hintButton} onPress={handleHint} activeOpacity={0.8}>
-          <Text style={styles.hintButtonText}>◈ REVEAL</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} activeOpacity={0.8}>
-          <Text style={styles.submitButtonText}>SUBMIT ▶</Text>
-        </TouchableOpacity>
+      {/* ── Track Info panel (replaces old action row) ──────────────────── */}
+      <View style={[styles.trackInfoPanel, { paddingBottom: spacing.base + insets.bottom }]}>
+        <Text style={styles.trackInfoLabel}>◆ TRACK INFO</Text>
+        <View style={styles.trackInfoRow}>
+          <Text style={styles.trackInfoFlavor}>BPM: 93</Text>
+          <Text style={styles.trackInfoFlavor}>KEY: Dm</Text>
+          <Text style={styles.trackInfoCounter}>{filledCells}/{totalCells}</Text>
+        </View>
+        <View style={styles.trackInfoBarTrack}>
+          <Animated.View
+            style={[
+              styles.trackInfoBarFill,
+              {
+                width: progressAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0%', '100%'],
+                }),
+              },
+            ]}
+          />
+        </View>
       </View>
 
       </View>{/* end bottomFixed */}
@@ -374,80 +460,97 @@ const styles = StyleSheet.create({
     color: colors.primaryMuted,
     fontStyle: 'italic',
   },
-  // ── Action row ─────────────────────────────────────────────────────────────
-  actionRow: {
+  // ── Action section (top of fixed panel) ───────────────────────────────────
+  actionSection: {
     flexDirection: 'row',
     paddingHorizontal: spacing.xxxl,
     paddingVertical: spacing.md,
     gap: spacing.lg,
     backgroundColor: colors.background,
+    borderBottomWidth: borders.thin,
+    borderBottomColor: colors.border,
   },
   hintButton: {
     flex: 1,
     paddingVertical: spacing.md,
     borderWidth: borders.thin,
-    borderColor: colors.primaryDark,
+    borderColor: colors.primaryAmberMuted,
+    borderRadius: 4,
     alignItems: 'center',
   },
   hintButtonText: {
     fontSize: typography.sizes.xs,
-    color: colors.primaryDark,
+    color: colors.primaryAmberMuted,
     fontWeight: typography.weights.bold,
     letterSpacing: typography.letterSpacing.wide,
   },
   submitButton: {
     flex: 2,
     paddingVertical: spacing.md,
-    backgroundColor: colors.primary,
+    borderWidth: borders.medium,              // thicker border — distinguishes from REVEAL
+    borderColor: colors.primaryAmber,         // amber — more prominent
+    borderRadius: 4,
     alignItems: 'center',
   },
   submitButtonText: {
     fontSize: typography.sizes.xs,
-    color: colors.textOnPrimary,
+    color: colors.primaryAmber,               // amber text — no filled background
     fontWeight: typography.weights.black,
     letterSpacing: typography.letterSpacing.wide,
   },
   // ── Keyboard ───────────────────────────────────────────────────────────────
   keyboard: {
-    backgroundColor: colors.backgroundAlt,
+    backgroundColor: '#0e0b06',          // darkest warm bg — makes keys pop
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
+    paddingBottom: spacing.base,
   },
   keyRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
-    gap: 4,
+    marginBottom: 7,                     // increased row gap (was 4)
+    gap: 6,                              // increased key gap (was 4)
   },
   key: {
-    minWidth: 30,
-    height: 38,
-    backgroundColor: colors.keyBackground,
-    borderWidth: borders.thin,
-    borderColor: colors.border,
+    minWidth: 32,                        // wider (was 30)
+    height: 46,                          // taller (was 38)
+    backgroundColor: '#2e2a1a',          // warm dark key face
+    borderWidth: 1,
+    borderColor: '#5a4828',              // warm amber-tinted border
+    borderBottomWidth: 3,                // thick bottom edge — 3D raised effect
+    borderBottomColor: '#0a0704',        // very dark bottom — depth shadow
+    borderRadius: 5,                     // rounded corners
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 4,
+    // iOS shadow
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.7,
+    shadowRadius: 5,
+    // Android elevation
+    elevation: 8,
   },
   specialKey: {
-    minWidth: 38,
-    backgroundColor: colors.surfaceAlt,
-    borderColor: colors.primaryMuted,
+    minWidth: 40,                        // wider special keys (was 38)
+    backgroundColor: '#1e1a0e',
+    borderColor: colors.primaryAmber,
+    borderBottomColor: '#0a0704',
   },
   keyText: {
-    fontSize: typography.sizes.base,
+    fontSize: typography.sizes.lg,       // larger text (was base/12 → lg/14)
     fontWeight: typography.weights.bold,
     color: colors.primaryMid,
     letterSpacing: 0,
   },
   specialKeyText: {
-    fontSize: typography.sizes.md,
-    color: colors.primary,
+    fontSize: typography.sizes.base,     // slightly larger (was md/11 → base/12)
+    color: colors.primaryAmber,          // amber for special keys
   },
   // ── Scroll content wrapper ─────────────────────────────────────────────────
   scrollContent: {
     flex: 1,
-    paddingBottom: BOTTOM_FIXED_HEIGHT,
+    // paddingBottom applied dynamically: BOTTOM_FIXED_HEIGHT + insets.bottom
   },
   // ── Fixed bottom wrapper ───────────────────────────────────────────────────
   bottomFixed: {
@@ -465,11 +568,92 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderWidth: borders.thin,
     borderColor: colors.border,
+    borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
   menuButtonText: {
     fontSize: typography.sizes.lg,
     color: colors.primaryMuted,
+  },
+  // ── Track Info panel (Phase 6 — replaces old action row) ──────────────────
+  trackInfoPanel: {
+    paddingHorizontal: spacing.xxxl,
+    paddingVertical: spacing.base,
+    backgroundColor: '#110e08',
+    borderTopWidth: borders.thin,
+    borderTopColor: '#2a1f0e',
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
+  },
+  trackInfoLabel: {
+    fontSize: typography.sizes.xxs,
+    color: '#3a2810',
+    letterSpacing: typography.letterSpacing.wider,
+    textTransform: 'uppercase' as const,
+    marginBottom: spacing.xs,
+  },
+  trackInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  trackInfoFlavor: {
+    fontSize: typography.sizes.md,
+    color: '#4a3520',
+    fontFamily: 'monospace' as any,
+  },
+  trackInfoCounter: {
+    fontSize: typography.sizes.md,
+    color: colors.primaryAmber,
+    fontWeight: typography.weights.bold,
+    fontFamily: 'monospace' as any,
+  },
+  trackInfoBarTrack: {
+    height: 3,
+    backgroundColor: '#1e1608',
+    borderRadius: 2,
+    marginTop: spacing.sm,
+    overflow: 'hidden',
+  },
+  trackInfoBarFill: {
+    height: '100%' as any,
+    backgroundColor: colors.primaryAmber,
+    borderRadius: 2,
+  },
+  // ── Vinyl disc (Phase 5) ───────────────────────────────────────────────────
+  vinyl: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#0e0b06',
+    borderWidth: 2,
+    borderColor: colors.primaryAmber,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+    flexShrink: 0,
+  },
+  vinylGroove1: {
+    position: 'absolute',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1,
+    borderColor: '#2a1f0e',
+  },
+  vinylGroove2: {
+    position: 'absolute',
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: '#2a1f0e',
+  },
+  vinylCenter: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.primaryAmber,
   },
 });
