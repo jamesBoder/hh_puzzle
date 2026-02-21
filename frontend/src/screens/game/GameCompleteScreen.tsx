@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Animated,
+  Easing,
 } from 'react-native';
 import { colors, typography, spacing, borders } from '../../constants/theme';
 
@@ -38,6 +40,26 @@ export const GameCompleteScreen = ({ route, navigation }: any) => {
 
   const pointsEarned = calcPointsEarned(basePoints, completed, timeTaken, hintsUsed);
 
+  // ── Spinning vinyl decoration ─────────────────────────────────────────────
+  const vinylRotation = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const spin = Animated.loop(
+      Animated.timing(vinylRotation, {
+        toValue: 1,
+        duration: 6000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    spin.start();
+    return () => spin.stop();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const vinylSpin = vinylRotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
   const handlePlayAgain = () => {
     navigation.pop(2); // back to PuzzleDetail
   };
@@ -52,12 +74,21 @@ export const GameCompleteScreen = ({ route, navigation }: any) => {
       contentContainerStyle={styles.content}
       bounces={false}
     >
-      {/* ── Vintage header divider ───────────────────────────────────────── */}
+      {/* ── Amber top divider ────────────────────────────────────────────── */}
       <View style={styles.topDivider} />
+
+      {/* ── Spinning vinyl decoration ────────────────────────────────────── */}
+      <Animated.View style={[styles.vinyl, { transform: [{ rotate: vinylSpin }] }]}>
+        <View style={styles.vinylGroove1} />
+        <View style={styles.vinylGroove2} />
+        <View style={styles.vinylGroove3} />
+        <View style={styles.vinylCenter}>
+          <Text style={styles.vinylCenterText}>{completed ? '◆' : '◇'}</Text>
+        </View>
+      </Animated.View>
 
       {/* ── Result badge ────────────────────────────────────────────────── */}
       <View style={styles.resultBadge}>
-        <Text style={styles.resultIcon}>{completed ? '◆' : '◇'}</Text>
         <Text style={styles.resultLabel}>
           {completed ? '◆ PUZZLE COMPLETE ◆' : '◇ INCOMPLETE ◇'}
         </Text>
@@ -68,7 +99,12 @@ export const GameCompleteScreen = ({ route, navigation }: any) => {
         {puzzleTitle.replace(/ #[a-f0-9]{6}$/, '').toUpperCase()}
       </Text>
 
-      <View style={styles.bottomDivider} />
+      {/* ── Diamond divider ──────────────────────────────────────────────── */}
+      <View style={styles.diamondDivider}>
+        <View style={styles.diamondLine} />
+        <View style={styles.diamondCenter} />
+        <View style={styles.diamondLine} />
+      </View>
 
       {/* ── Stats grid ──────────────────────────────────────────────────── */}
       <View style={styles.statsGrid}>
@@ -86,6 +122,13 @@ export const GameCompleteScreen = ({ route, navigation }: any) => {
           <Text style={styles.statValue}>{hintsUsed}</Text>
           <Text style={styles.statLabel}>HINTS</Text>
         </View>
+      </View>
+
+      {/* ── Diamond divider ──────────────────────────────────────────────── */}
+      <View style={styles.diamondDivider}>
+        <View style={styles.diamondLine} />
+        <View style={styles.diamondCenter} />
+        <View style={styles.diamondLine} />
       </View>
 
       {/* ── Score breakdown ─────────────────────────────────────────────── */}
@@ -146,6 +189,9 @@ export const GameCompleteScreen = ({ route, navigation }: any) => {
         </TouchableOpacity>
       </View>
 
+      {/* ── Bottom amber divider ─────────────────────────────────────────── */}
+      <View style={styles.bottomAmberDivider} />
+
       <View style={{ height: spacing.hero }} />
     </ScrollView>
   );
@@ -167,28 +213,98 @@ const styles = StyleSheet.create({
   topDivider: {
     width: '100%',
     height: borders.medium,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.primaryAmber,
     marginBottom: spacing.xxl,
   },
-  bottomDivider: {
-    width: '60%',
+  bottomAmberDivider: {
+    width: '100%',
     height: borders.thin,
-    backgroundColor: colors.border,
+    backgroundColor: colors.primaryAmberDark,
+    marginTop: spacing.xxl,
+    opacity: 0.5,
+  },
+  // ── Diamond divider ───────────────────────────────────────────────────────
+  diamondDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '60%',
     marginVertical: spacing.xxl,
+  },
+  diamondLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.primaryAmberDark,
+    opacity: 0.5,
+  },
+  diamondCenter: {
+    width: 8,
+    height: 8,
+    backgroundColor: colors.primaryAmber,
+    transform: [{ rotate: '45deg' }],
+    marginHorizontal: spacing.md,
+  },
+  // ── Vinyl decoration ──────────────────────────────────────────────────────
+  vinyl: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#0e0b06',
+    borderWidth: 2,
+    borderColor: colors.primaryAmber,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xxl,
+    shadowColor: colors.primaryAmber,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  vinylGroove1: {
+    position: 'absolute',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.04)',
+  },
+  vinylGroove2: {
+    position: 'absolute',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.04)',
+  },
+  vinylGroove3: {
+    position: 'absolute',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  vinylCenter: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.primaryAmber,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  vinylCenterText: {
+    fontSize: 6,
+    color: '#0e0b06',
+    fontWeight: '900' as const,
   },
   // ── Result badge ──────────────────────────────────────────────────────────
   resultBadge: {
     alignItems: 'center',
-    marginBottom: spacing.xxl,
-  },
-  resultIcon: {
-    fontSize: 48,
-    color: colors.primary,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   resultLabel: {
     fontSize: typography.sizes.xs,
-    color: colors.primaryDark,
+    color: colors.primaryAmber,
     letterSpacing: typography.letterSpacing.wider,
     fontWeight: typography.weights.bold,
   },
@@ -196,7 +312,7 @@ const styles = StyleSheet.create({
   puzzleTitle: {
     fontSize: typography.sizes.h2,
     fontWeight: typography.weights.black,
-    color: colors.primary,
+    color: colors.primaryAmber,
     letterSpacing: typography.letterSpacing.wide,
     textAlign: 'center',
   },
@@ -222,12 +338,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: typography.sizes.h2,
     fontWeight: typography.weights.black,
-    color: colors.primary,
+    color: colors.primaryAmber,
     letterSpacing: typography.letterSpacing.tight,
   },
   pointsValue: {
     fontSize: typography.sizes.h1,
-    color: colors.primary,
+    color: colors.primaryAmber,
   },
   statLabel: {
     fontSize: typography.sizes.xxs,
@@ -271,20 +387,20 @@ const styles = StyleSheet.create({
   },
   breakdownTotalLabel: {
     fontSize: typography.sizes.xs,
-    color: colors.primaryDark,
+    color: colors.primaryAmber,
     letterSpacing: typography.letterSpacing.wide,
     fontWeight: typography.weights.bold,
   },
   breakdownTotalValue: {
     fontSize: typography.sizes.lg,
-    color: colors.primary,
+    color: colors.primaryAmber,
     fontWeight: typography.weights.black,
     letterSpacing: typography.letterSpacing.normal,
   },
   // ── Message ───────────────────────────────────────────────────────────────
   message: {
     fontSize: typography.sizes.xs,
-    color: colors.primaryDark,
+    color: colors.primaryAmber,
     letterSpacing: typography.letterSpacing.wider,
     fontWeight: typography.weights.bold,
     textAlign: 'center',
@@ -304,26 +420,27 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   primaryButton: {
-    backgroundColor: colors.primary,
+    borderWidth: borders.medium,
+    borderColor: colors.primaryAmber,
     paddingVertical: spacing.xxl,
     alignItems: 'center',
   },
   primaryButtonText: {
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.black,
-    color: colors.textOnPrimary,
+    color: colors.primaryAmber,
     letterSpacing: typography.letterSpacing.wider,
   },
   secondaryButton: {
     borderWidth: borders.thin,
-    borderColor: colors.primaryDark,
+    borderColor: colors.primaryAmberMuted,
     paddingVertical: spacing.xxl,
     alignItems: 'center',
   },
   secondaryButtonText: {
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.bold,
-    color: colors.primaryDark,
+    color: colors.primaryAmberMuted,
     letterSpacing: typography.letterSpacing.wider,
   },
 });
