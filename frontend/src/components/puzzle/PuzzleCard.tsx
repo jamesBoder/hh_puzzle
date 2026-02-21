@@ -64,7 +64,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderLeftWidth: borders.thick,
     borderLeftColor: colors.primary,
+    borderRadius: 8,
     padding: spacing.xl,
+    // Subtle card shadow
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 4,
   },
   topBar: {
     flexDirection: 'row',
